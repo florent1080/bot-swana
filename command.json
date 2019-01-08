@@ -1,0 +1,189 @@
+{
+  "!cantina": {
+    "cmd": "!cantina",
+    "msg": "https://media-cdn.tripadvisor.com/media/photo-s/08/7b/8f/c8/la-cantina.jpg",
+    "author": {
+      "id": "194100736794034176",
+      "username": "laParoisse",
+      "discriminator": "2984",
+      "avatar": "1e73dcbe10691effc861e5a619b0a913",
+      "bot": false
+    }
+  },
+  "!streamer": {
+    "cmd": "!streamer",
+    "msg": "http://multitwitch.tv/therealtetro/geekmomo",
+    "author": {
+      "id": "194100736794034176",
+      "username": "laParoisse",
+      "discriminator": "2984",
+      "avatar": "1e73dcbe10691effc861e5a619b0a913",
+      "bot": false
+    }
+  },
+  "!rank": {
+    "cmd": "!rank",
+    "msg": "https://wowprogress.com/guild_img/1324119/out/type.site",
+    "author": {
+      "id": "194100736794034176",
+      "username": "laParoisse",
+      "discriminator": "2984",
+      "avatar": "1e73dcbe10691effc861e5a619b0a913",
+      "bot": false
+    }
+  },
+  "!ranked": {
+    "cmd": "!ranked",
+    "msg": "https://wowprogress.com/guild_img/1324119/out/type.forum/guild_rank.realm/ach_rank.realm",
+    "author": {
+      "id": "194100736794034176",
+      "username": "laParoisse",
+      "discriminator": "2984",
+      "avatar": "1e73dcbe10691effc861e5a619b0a913",
+      "bot": false
+    }
+  },
+  "!brunomars": {
+    "cmd": "!brunomars",
+    "msg": "https://www.youtube.com/watch?v=oGHLmTVyjoo",
+    "author": {
+      "id": "146613903189737472",
+      "username": "Ollrek",
+      "discriminator": "8130",
+      "avatar": "6c675f3c0d1ce7b0b7d447d4201f6bb0",
+      "bot": false
+    }
+  },
+  "!pasdegants": {
+    "cmd": "!pasdegants",
+    "msg": "http://imgur.com/a/Q4Zfl 🖕",
+    "author": {
+      "id": "146613903189737472",
+      "username": "Ollrek",
+      "discriminator": "8130",
+      "avatar": "6c675f3c0d1ce7b0b7d447d4201f6bb0",
+      "bot": false
+    }
+  },
+  "!rokkfist": {
+    "cmd": "!rokkfist",
+    "msg": "http://gph.is/1NpzRQs",
+    "author": {
+      "id": "194100736794034176",
+      "username": "laParoisse",
+      "discriminator": "2984",
+      "avatar": "514ede06aa2e4d1baded463df4bc029c",
+      "bot": false
+    }
+  },
+  "!f2b": {
+    "cmd": "!f2b",
+    "msg": "https://cdn.discordapp.com/attachments/187593250268381184/343009240513773568/2Q.png",
+    "author": {
+      "id": "146613903189737472",
+      "username": "Ollrek",
+      "discriminator": "8130",
+      "avatar": "6c675f3c0d1ce7b0b7d447d4201f6bb0",
+      "bot": false
+    }
+  },
+  "!spam": {
+    "cmd": "!spam",
+    "msg": "https://i2.wp.com/pfsensesetup.com/wp-content/uploads/2013/09/Spam_with_cans.jpeg",
+    "author": {
+      "id": "147093241420840960",
+      "username": "Supermomo",
+      "discriminator": "6001",
+      "avatar": "f08e92330b6fd4cd745ed575e2a2d7db",
+      "bot": false
+    }
+  },
+  "!raiddulundi": {
+    "cmd": "!raiddulundi",
+    "msg": "http://i.imgur.com/zinIPVQ.gif",
+    "author": {
+      "id": "194100736794034176",
+      "username": "laParoisse",
+      "discriminator": "2984",
+      "avatar": "514ede06aa2e4d1baded463df4bc029c",
+      "bot": false
+    }
+  },
+  "!lavatar": {
+    "cmd": "!lavatar",
+    "msg": "http://gph.is/2ujH57v",
+    "author": {
+      "id": "146613903189737472",
+      "username": "Ollrek",
+      "discriminator": "8130",
+      "avatar": "6c675f3c0d1ce7b0b7d447d4201f6bb0",
+      "bot": false
+    }
+  },
+  "!dactylographe": {
+    "cmd": "!dactylographe",
+    "msg": "http://www.reactiongifs.com/r/ktpng.gif",
+    "author": {
+      "id": "284777818108461056",
+      "username": "Bebert",
+      "discriminator": "2162",
+      "avatar": "abbaa40e614c68c136b223ac0d1f709d",
+      "bot": false
+    }
+  },
+  "!toutvabien": {
+    "cmd": "!toutvabien",
+    "msg": "https://cdn.discordapp.com/attachments/187593250268381184/345587998869422081/toutvabien.png",
+    "author": {
+      "id": "161100456112685056",
+      "username": "Yannou",
+      "discriminator": "1568",
+      "avatar": "bf2671e4c2de7e3420d7d7f885a43801",
+      "bot": false
+    }
+  },
+  "!BBC": {
+    "cmd": "!BBC",
+    "msg": "https://imgur.com/gallery/y4VPw",
+    "author": {
+      "id": "194100736794034176",
+      "username": "laParoisse",
+      "discriminator": "2984",
+      "avatar": "17378a91992b3d084b9bd5c7dcd17788",
+      "bot": false
+    }
+  },
+  "!climax": {
+    "cmd": "!climax",
+    "msg": "https://i.imgur.com/I6uPrAs.gif",
+    "author": {
+      "id": "194100736794034176",
+      "username": "laParoisse",
+      "discriminator": "2984",
+      "avatar": "17378a91992b3d084b9bd5c7dcd17788",
+      "bot": false
+    }
+  },
+  "!salty": {
+    "cmd": "!salty",
+    "msg": "http://gph.is/2iUaL8y",
+    "author": {
+      "id": "194100736794034176",
+      "username": "L4go",
+      "discriminator": "2984",
+      "avatar": "cc1ecefaaf7da25c18384755ab1f5d06",
+      "bot": false
+    }
+  },
+  "cenarius": {
+    "cmd": "cenarius",
+    "msg": "https://cdn.discordapp.com/attachments/425640788165394454/496376443975237632/tenor.gif",
+    "author": {
+      "id": "146613903189737472",
+      "username": "Ollrek",
+      "discriminator": "8130",
+      "avatar": "7a728d525146511da04a9e2b88d8dcb1",
+      "bot": false
+    }
+  }
+}
