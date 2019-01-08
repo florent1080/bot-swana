@@ -1,6 +1,6 @@
 /*jshint esversion: 6 */
 var Discordie = require("discordie");
-var fs = require('fs');
+const fs = require('fs');
 var client = new Discordie();
 var url = '/feeds/cells/1qwoWEsV5VGpK9O8GFMMVEDSsCdw5zBedApCHD1igOUM/1/public/values?alt=json-in-script&callback=doData';
 var raidzbub_url = '/feeds/cells/1am4oo8wq7Ho_cJ4KoQpa1hotCbsjwYCwMylAGovy-Bs/1/public/values?alt=json-in-script&callback=doData';
@@ -46,7 +46,7 @@ setInterval(function() {
     if (clientState != client.state)
         console.log(client.state + " at " + new Date().toString());
     clientState = client.state;
-}, 30000, (error) => { /* handle error */ });
+}, 30000, function(error) { /* handle error */ });
 
 var twitch_template = {
     "stream": {},
@@ -92,7 +92,7 @@ setInterval(function() {
             method: 'GET'
         }
         /* console.log("URL : " + twitch_option.host + twitch_option.path); */
-    var req = https.request(twitch_option, (res) => {
+    var req = https.request(twitch_option, function(res) {
         if (res.statusCode != 200) {
             return console.log("invalide status " + res.statusCode + " at " + new Date().toString());
         }
@@ -757,13 +757,8 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
 
 function write_file(file, obj) {
     try {
-        fs.truncate(file, 0, (err) => { /* catch error */ });
-        var writeStream = fs.createWriteStream(file);
-        writeStream.on('open', function(fd) {
-            writeStream.write(JSON.stringify(obj, null, 2));
-            writeStream.end();
-        })
-
+        var json = JSON.stringify(obj);
+	fs.writeFileSync(file, json);
     } catch (e) {
         console.log('invalid json write' + file);
         console.log(e.message);
