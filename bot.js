@@ -1,7 +1,9 @@
 /*jshint esversion: 6 */
-var Discordie = require("discordie");
-var fs = require('fs');
-var client = new Discordie();
+const Discordie = require("discordie");
+const fs = require('fs');
+const client = new Discordie();
+const restoHandler = require("./resto/resto-handler");
+
 var url = '/feeds/cells/1qwoWEsV5VGpK9O8GFMMVEDSsCdw5zBedApCHD1igOUM/1/public/values?alt=json-in-script&callback=doData';
 var raidzbub_url = '/feeds/cells/1am4oo8wq7Ho_cJ4KoQpa1hotCbsjwYCwMylAGovy-Bs/1/public/values?alt=json-in-script&callback=doData';
 var http = require('http');
@@ -22,19 +24,15 @@ var affixes_list = ["Raging, Volcanic, Tyrannical",
     "Sanguine, Grevious, Fortified",
     "Bolstering, Explosive, Tyrannical",
     "Bursting, Quaking, Fortified"
-]
+];
 
 var options = {
     host: 'spreadsheets.google.com',
     path: raidzbub_url
-}
+};
+
 private_commande = {};
-resto_dispo = {};
-resto_mangeur = {
-    "date": "",
-    "comment": "",
-    "name": ""
-}
+
 var clientState;
 
 var debug_guild = 0;
@@ -259,9 +257,11 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
         case "!dev":
             e.message.channel.sendMessage("	http://qeled.github.io/discordie/#/docs/Discordie?_k=9oyisd");
             break;
+
         case "!invlink":
             e.message.channel.sendMessage("https://discordapp.com/oauth2/authorize?scope=bot&client_id=283279977464725504");
             break;
+
         case "!ping":
             e.message.channel.sendMessage(e.message.author.mention + " pong !?");
             break;
@@ -276,57 +276,17 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             break;
 
         case "!resto?":
-            var final_string = "";
-            var comment_string = "";
-            var mangeur_list = [];
-            var jour = ['', '', '', '', ''];
-            resto_dispo = read_file("./Discord_bot/resto.json");
-            var mangeur_counter = [0, 0, 0, 0, 0];
-            for (var mangeur in resto_dispo) {
-                mangeur_list.push(mangeur);
-                // console.log("resto_dispo : ");
-                // console.log(resto_dispo[mangeur]);
-                arr = resto_dispo[mangeur]['date'].split("").filter(function(item, index, inputArray) { // remove
-                    // duplicate
-                    // day
-                    return inputArray.indexOf(item) == index;
-                });
-                arr.forEach(function(j, index) { // sort day
-                        if (j <= 5) {
-                            // console.log("jour : " + j + " " +
-                            // resto_dispo[mangeur]["name"]);
-                            jour[j - 1] += (resto_dispo[mangeur]["name"] + ", ");
-                            mangeur_counter[j - 1] += 1;
-                        }
-                    })
-                    // console.log(jour);
-                if ((resto_dispo[mangeur]["comment"] != undefined) && (resto_dispo[mangeur]["comment"] != ''))
-                    comment_string += resto_dispo[mangeur]["name"] + " : " + resto_dispo[mangeur]["comment"] + "\n";
-            }
-            if (mangeur_list === undefined || mangeur_list.length == 0) // return
-            // planing
-                e.message.channel.sendMessage("Personne encore inscrit.\n!disporesto \"jjj\" \"resto\" pour vous inscrire");
-            else {
-                // final_string += mangeur_list + " sont dispo pour le
-                // resto\n";
-                jour.forEach(function(elem, index) {
-                        final_string += week_day[index] +
-                            " (" + mangeur_counter[index] + ") : " + elem + "\n";
-                    })
-                    // console.log("final_string : " + final_string +
-                    // comment_string);
-                e.message.channel.sendMessage(final_string + comment_string);
-            }
-
+            e.message.channel.sendMessage(restoHandler.get_registered_eaters());
             break;
         case "!testresto":
             e.message.channel.sendMessage("!disporesto 1,2,3,4 all");
             break;
         case "!resetresto":
-            resto_dispo = {};
-            write_file("./Discord_bot/resto.json", resto_dispo);
-            // e.message.channel.sendMessage("planning du resto reset");
-            e.message.addReaction("\ud83d\udc4c");
+            if (restoHandler.clear_eaters()) {
+                e.message.addReaction("\ud83d\udc4c");
+            } else {
+                e.message.channel.sendMessage("Oupsy, ca marche pô :sad:");
+            }
             break;
 
         case "!cho2plé":
@@ -487,6 +447,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             }
             break;
     }
+
     if (e.message.content.startsWith("!vote ")) {
         var msg = e.message;
         if (question == "") {
@@ -504,8 +465,8 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                 }
             }
         })
-
     }
+
     if (e.message.content.startsWith("!votecreate")) {
         try {
             var msg = e.message;
@@ -522,6 +483,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             e.message.channel.sendMessage("erreur sur la commande **\"!votecreate\"**")
         }
     }
+
     if (e.message.content.startsWith("!stream")) {
         var msg = e.message;
         var cmd = msg.content.split(" ")[1];
@@ -608,6 +570,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
         }
 
     }
+
     if (e.message.content.startsWith("!dbgMsg")) {
         var msg = e.message;
         if (msg.content.split(" ")[1] == "0") {
@@ -618,6 +581,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
         debug_channel = e.message.channel.id;
         e.message.channel.sendMessage("saved on " + debug_guild + " " + debug_channel);
     }
+
     if (e.message.content.startsWith("!calendar")) {
         var msg = e.message;
         var noPlayer = 1;
@@ -693,6 +657,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
         });
         request.end();
     }
+
     if (e.message.content.startsWith("!createcommand")) {
         var msg = e.message;
         var command = {
@@ -715,6 +680,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
         msg.channel.sendMessage("commande " + command["cmd"] + " créée");
 
     }
+
     if (e.message.content.startsWith("!removecommand")) {
         var msg = e.message;
         var cmd = msg.content.split(" ")[1];
@@ -726,30 +692,18 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
         msg.channel.sendMessage("commande " + cmd + " supprimée");
 
     }
+
     if (e.message.content.startsWith("!botname")) {
         var name = e.message.content.substr(e.message.content.indexOf(" ") + 1);
         client.User.setUsername(name);
         e.message.channel.sendMessage("hoooo yeeaaaa " + name + " débarque !!");
     }
+
     if (e.message.content.startsWith("!disporesto")) {
-        var msg = e.message;
-        var date = msg.content.split(" ")[1];
-        var comment = "";
-        if (msg.content.split(" ")[2] != undefined)
-            comment = msg.content.replace(/^([^ ]+ ){2}/, ''); // remove 2
-        // st words
-        if ((date == undefined) /* ||( resto == undefined) */ ) {
-            // console.log("erreur resto");
-            msg.channel.sendMessage("erreur sur la commande");
+        if (restoHandler.register_eater(e.message)) {
+            e.message.addReaction("\ud83d\udc4c");
         } else {
-            resto_mangeur['date'] = date;
-            resto_mangeur['comment'] = comment;
-            resto_mangeur['name'] = msg.displayUsername;
-            resto_dispo = read_file("./Discord_bot/resto.json");
-            resto_dispo[msg.author.mention] = resto_mangeur;
-            write_file("./Discord_bot/resto.json", resto_dispo);
-            // msg.channel.sendMessage("Sauvegardé !!");
-            msg.addReaction("\ud83d\udc4c");
+            e.message.channel.sendMessage("Erreur sur la commande :angry:");
         }
     }
 
@@ -879,6 +833,7 @@ function Send_debug_msg(message) {
     channels.sendMessage(message);
     channels.sendMessage("!dbgMsg 0 pour enlever le mode débug");
 }
+
 Date.prototype.getWeek = function() {
     var onejan = new Date(this.getFullYear(), 0, 1);
     var today = new Date(this.getFullYear(), this.getMonth(), this.getDate());

@@ -3,6 +3,17 @@
   "version": "1.0.0",
   "description": "discort_bot",
   "main": "bot.js",
+  "engines": {
+    "node": "10.x",
+    "npm": "*"
+  },
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/florent1080/bot-swana"
+  },
   "dependencies": {
     "child_process": "^1.0.2",
     "childprocess": "^2.0.2",
@@ -18,9 +29,6 @@
     "twitch-api": "^0.4.6"
   },
   "devDependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "author": "",
   "license": "ISC"
 }
