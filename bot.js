@@ -3,6 +3,7 @@ const Discordie = require("discordie");
 const fs = require('fs');
 const client = new Discordie();
 const restoHandler = require("./resto/resto-handler");
+const utils = require("./utils/utils");
 
 var url = '/feeds/cells/1qwoWEsV5VGpK9O8GFMMVEDSsCdw5zBedApCHD1igOUM/1/public/values?alt=json-in-script&callback=doData';
 var raidzbub_url = '/feeds/cells/1am4oo8wq7Ho_cJ4KoQpa1hotCbsjwYCwMylAGovy-Bs/1/public/values?alt=json-in-script&callback=doData';
@@ -36,7 +37,7 @@ private_commande = {};
 var clientState;
 
 var debug_guild = 0;
-var debug_channel = 0
+var debug_channel = 0;
 
 var question = "";
 var answer = [];
@@ -59,7 +60,7 @@ var option = {
 var index = 0;
 // ----------------------------------INTERVAL FUNCTION UPDATE
 // STREAMER-----------------------------------------
-setInterval(function() {
+setInterval(() => {
     if (!client.connected) {
         return console.log("|Discordie| not connected : " + client.state + " at " + new Date().toString());
     } else {
@@ -68,8 +69,10 @@ setInterval(function() {
         };
         client.User.setStatus("online", game);
     }
+    return;
+
     var last_name = "";
-    var twitch = read_file("./Discord_bot/twitch.json");
+    var twitch = utils.read_file("./twitch.json");
     refreshed_counter = 0;
 
     // console.log("twitch :" + twitch['list']);
@@ -189,7 +192,7 @@ setInterval(function() {
 
 client.connect({
     // replace this sample token
-    token: "MjgzMjc5OTc3NDY0NzI1NTA0.C44PFQ.OQfJubpFUmK-0LHc2PYPmM5aPNA"
+    token: "NTMyODU5NjM0MTA5OTA2OTU0.Dxin4w.tY_aIqg35JovV-ifOWf5B38QT8E"
 });
 /*
  * var twitch = new TwitchApi({ clientId: 'qxihlu11ef6gpohfhqb9b27d40u6lj',
@@ -245,7 +248,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             break;
         case "!helpcommand":
             // console.log("!helpcommand");
-            private_commande = read_file("./Discord_bot/command.json");
+            private_commande = utils.read_file("./command.json");
             var str = "";
             for (var cmd in private_commande) {
                 str += private_commande[cmd]["cmd"] + " by " + private_commande[cmd]["author"].username + "\n";
@@ -441,7 +444,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             answer = [];
             break;
         default:
-            private_commande = read_file("./Discord_bot/command.json");
+            private_commande = utils.read_file("./command.json");
             if (private_commande[e.message.content] != undefined) {
                 e.message.channel.sendMessage(private_commande[e.message.content]["msg"]);
             }
@@ -487,7 +490,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
     if (e.message.content.startsWith("!stream")) {
         var msg = e.message;
         var cmd = msg.content.split(" ")[1];
-        var twitch = read_file("./Discord_bot/twitch.json");
+        var twitch = utils.read_file("./twitch.json");
         if (twitch['list'] == undefined)
             twitch = twitch_template;
         switch (cmd) {
@@ -672,7 +675,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
         // words
         command["cmd"] = msg.content.split(" ")[1];
         command["author"] = e.message.author;
-        private_commande = read_file("./Discord_bot/command.json");
+        private_commande = utils.read_file("./command.json");
         // console.log("private 1 : ");console.log(private_commande);
         private_commande[command["cmd"]] = command;
         // console.log("private 2 : ");console.log(private_commande);
@@ -684,7 +687,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
     if (e.message.content.startsWith("!removecommand")) {
         var msg = e.message;
         var cmd = msg.content.split(" ")[1];
-        private_commande = read_file("./Discord_bot/command.json");
+        private_commande = utils.read_file("./command.json");
         // console.log("private 1 : ");console.log(private_commande);
         delete private_commande[cmd];
         // console.log("private 2 : ");console.log(private_commande);
@@ -727,18 +730,6 @@ function write_file(file, obj) {
      * (err) { if (err) { console.error('error write in file '+file); } } );
      */
     // console.log("save in file : "+JSON.stringify(obj, null, 2));
-}
-
-function read_file(file) {
-    try {
-        var object = JSON.parse(fs.readFileSync(file, "UTF-8"));
-    } catch (e) {
-        console.log('invalid json read' + file);
-        console.log(e.message + " at " + new Date().toString());
-        object = {};
-        Send_debug_msg('invalid json read' + file + '\n' + e.message + " at " + new Date().toString());
-    }
-    return object;
 }
 
 function parse(data) {
