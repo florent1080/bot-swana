@@ -8,6 +8,7 @@ var http = require('http');
 const https = require('https');
 var week_day = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"];
 var week_day_calendar = ["mer", "jeu", "ven", "sam", "dim", "lun", "mar"];
+var allianceZones = ["Vallée Chantorage", "Rade de Tiragarde", "Drustvar"];
 var twitch_client_ID = "qxihlu11ef6gpohfhqb9b27d40u6lj";
 var twitch_interval = 30000;
 var affixes_list = ["Raging, Volcanic, Tyrannical",
@@ -236,7 +237,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                 "**!resto?** : retourne les disponibilitées du resto\n" +
                 "**!resetresto** : reset le planing du resto\n" +
                 "**!disporesto** j (commentaire): defini mes dispo du resto ex : \"!disporesto 124 osef\" pour lundi,mardi,jeudi\n" +
-                "**!assault** : affiche le prochaine assault\n" +
+                "**!assault** : affiche le prochain assaut\n" +
                 "**!invasion** : affiche la prochaine invasion de la Légion\n" +
                 "**!affixes** : affiche les affixes de donjon de clé mythique de la semaine \n" +
                 "**!goplay** : Uniquement pour les mecs MEGA cho2plé ! \n" +
@@ -394,38 +395,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             break;
         case "!assault":
         case "!assaults":
-			var alliance_logo = "https://d1u5p3l4wpay3k.cloudfront.net/wowpedia/thumb/6/60/AllianceLogo.png/358px-AllianceLogo.png?version=66daef7ad5588507dc67be40cfc87a89%201.5x,%20https://d1u5p3l4wpay3k.cloudfront.net/wowpedia/thumb/6/60/AllianceLogo.png/477px-AllianceLogo.png?version=66daef7ad5588507dc67be40cfc87a89%202x"
-            var opts = {
-                host: 'www.mamytwink.com',
-                path: "/assauts-bfa",
-				method: "GET",
-				encoding: 'ascii'
-            }
-            var data = "";
-            var requests = https.request(opts, function(res) {
-                res.on('data', function(raw) {
-                    data += raw;
-                })
-                res.on('end', function() {
-					data = data.replace('<br />','\n').replace(/<[^>]+>/g, '').replace(/\t/g, '').replace('&#039;',"'");
-                    e.message.channel.sendMessage(" ", false, {
-                        color: 0x009900,
-                        thumbnail: {
-                            url: alliance_logo
-                        },
-						author: {
-							name: data.split('\n')[2],
-                            icon_url: alliance_logo
-						  },
-						  description: data.split('\n')[3],
-                        timestamp: new Date()
-                    });
-                });
-                res.on('error', function(e) {
-                    console.log('problem with request: ' + e.message + " at " + new Date().toString());
-                })
-            });
-            requests.end();
+            assaults_command(e);
             break;
         case "!inva":
         case "!invasions":
@@ -754,6 +724,50 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
     }
 
 });
+
+function assaults_command(e) {
+    var alliance_logo = "https://d1u5p3l4wpay3k.cloudfront.net/wowpedia/thumb/6/60/AllianceLogo.png/358px-AllianceLogo.png"
+    var horde_logo = "https://d1u5p3l4wpay3k.cloudfront.net/wowpedia/thumb/e/e2/HordeLogo.png/473px-HordeLogo.png"
+    var opts = {
+        host: 'www.mamytwink.com',
+        path: "/assauts-bfa",
+        method: "GET",
+        encoding: 'ascii'
+    }
+    var data = "";
+    var requests = https.request(opts, function(res) {
+        res.on('data', function(raw) {
+            data += raw;
+        })
+        res.on('end', function() {
+            var zone = data.substring(data.lastIndexOf("<b>")+3, data.lastIndexOf("</b>"));
+            data = data.replace('<br />','\n').replace(/<[^>]+>/g, '').replace(/\t/g, '').replace('&#039;',"'");
+            var faction_logo = "";
+            if (allianceZones.includes(zone)) {
+                faction_logo = alliance_logo;
+            } else {
+                faction_logo = horde_logo;
+            }
+			
+            e.message.channel.sendMessage(" ", false, {
+                color: 0x009900,
+                thumbnail: {
+                    url: faction_logo
+                },
+                author: {
+                    name: data.split('\n')[2],
+                    icon_url: faction_logo
+                },
+                description: data.split('\n')[3],
+                timestamp: new Date()
+            });
+        });
+        res.on('error', function(e) {
+            console.log('Problem with request: ' + e.message + " at " + new Date().toString());
+        })
+    });
+    requests.end();
+}
 
 function write_file(file, obj) {
     try {
