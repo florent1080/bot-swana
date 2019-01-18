@@ -72,7 +72,7 @@ setInterval(function() {
         client.User.setStatus("online", game);
     }
     var last_name = "";
-    var twitch = read_file("./Discord_bot/twitch.json");
+    var twitch = read_file("./twitch.json");
     refreshed_counter = 0;
 
     // console.log("twitch :" + twitch['list']);
@@ -180,7 +180,7 @@ setInterval(function() {
                 twitch['stream'][name]["refreshed"] = false;
             }
             // if ((++refreshed_counter) == twitch['list'].length)
-            write_file("./Discord_bot/twitch.json", twitch);
+            write_file("./twitch.json", twitch);
         });
     });
     req.on('error', (e) => {
@@ -248,7 +248,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             break;
         case "!helpcommand":
             // console.log("!helpcommand");
-            private_commande = read_file("./Discord_bot/command.json");
+            private_commande = read_file("./command.json");
             var str = "";
             for (var cmd in private_commande) {
                 str += private_commande[cmd]["cmd"] + " by " + private_commande[cmd]["author"].username + "\n";
@@ -281,7 +281,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             var comment_string = "";
             var mangeur_list = [];
             var jour = ['', '', '', '', ''];
-            resto_dispo = read_file("./Discord_bot/resto.json");
+            resto_dispo = read_file("./resto.json");
             var mangeur_counter = [0, 0, 0, 0, 0];
             for (var mangeur in resto_dispo) {
                 mangeur_list.push(mangeur);
@@ -325,7 +325,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             break;
         case "!resetresto":
             resto_dispo = {};
-            write_file("./Discord_bot/resto.json", resto_dispo);
+            write_file("./resto.json", resto_dispo);
             // e.message.channel.sendMessage("planning du resto reset");
             e.message.addReaction("\ud83d\udc4c");
             break;
@@ -451,7 +451,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             answer = [];
             break;
         default:
-            private_commande = read_file("./Discord_bot/command.json");
+            private_commande = read_file("./command.json");
             if (private_commande[e.message.content] != undefined) {
                 e.message.channel.sendMessage(private_commande[e.message.content]["msg"]);
             }
@@ -495,7 +495,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
     if (e.message.content.startsWith("!stream")) {
         var msg = e.message;
         var cmd = msg.content.split(" ")[1];
-        var twitch = read_file("./Discord_bot/twitch.json");
+        var twitch = read_file("./twitch.json");
         if (twitch['list'] == undefined)
             twitch = twitch_template;
         switch (cmd) {
@@ -524,7 +524,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                             e.message.channel.sendMessage(raw["message"]);
                         } else {
                             if (twitch['list'].pushIfNotExist(streamer)) {
-                                write_file("./Discord_bot/twitch.json", twitch);
+                                write_file("./twitch.json", twitch);
                                 e.message.channel.sendMessage(raw["display_name"] + ' add to your list');
                             } else {
                                 e.message.channel.sendMessage(streamer + " is already in your list");
@@ -549,7 +549,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                     } else {
                         msg.channel.sendMessage("le channel n'est pas dans la liste");
                     }
-                    write_file("./Discord_bot/twitch.json", twitch);
+                    write_file("./twitch.json", twitch);
                 }
                 break;
             case "list":
@@ -569,7 +569,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                 channel = channel.replace(/[^\/\d]/g, '');
                 twitch["option"]["guild"] = msg.guild.id;
                 twitch["option"]["channel"] = channel;
-                write_file("./Discord_bot/twitch.json", twitch);
+                write_file("./twitch.json", twitch);
                 break;
 
             default:
@@ -677,22 +677,22 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
         // words
         command["cmd"] = msg.content.split(" ")[1];
         command["author"] = e.message.author;
-        private_commande = read_file("./Discord_bot/command.json");
+        private_commande = read_file("./command.json");
         // console.log("private 1 : ");console.log(private_commande);
         private_commande[command["cmd"]] = command;
         // console.log("private 2 : ");console.log(private_commande);
-        write_file("./Discord_bot/command.json", private_commande);
+        write_file("./command.json", private_commande);
         msg.channel.sendMessage("commande " + command["cmd"] + " créée");
 
     }
     if (e.message.content.startsWith("!removecommand")) {
         var msg = e.message;
         var cmd = msg.content.split(" ")[1];
-        private_commande = read_file("./Discord_bot/command.json");
+        private_commande = read_file("./command.json");
         // console.log("private 1 : ");console.log(private_commande);
         delete private_commande[cmd];
         // console.log("private 2 : ");console.log(private_commande);
-        write_file("./Discord_bot/command.json", private_commande);
+        write_file("./command.json", private_commande);
         msg.channel.sendMessage("commande " + cmd + " supprimée");
 
     }
@@ -715,9 +715,9 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             resto_mangeur['date'] = date;
             resto_mangeur['comment'] = comment;
             resto_mangeur['name'] = msg.displayUsername;
-            resto_dispo = read_file("./Discord_bot/resto.json");
+            resto_dispo = read_file("./resto.json");
             resto_dispo[msg.author.mention] = resto_mangeur;
-            write_file("./Discord_bot/resto.json", resto_dispo);
+            write_file("./resto.json", resto_dispo);
             // msg.channel.sendMessage("Sauvegardé !!");
             msg.addReaction("\ud83d\udc4c");
         }
