@@ -10,7 +10,7 @@ var week_day = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"];
 var week_day_calendar = ["mer", "jeu", "ven", "sam", "dim", "lun", "mar"];
 var allianceZones = ["Vallée Chantorage", "Rade de Tiragarde", "Drustvar"];
 var twitch_client_ID = "qxihlu11ef6gpohfhqb9b27d40u6lj";
-var twitch_interval = 300;
+var twitch_interval = 30000;
 var affixes_list = ["Raging, Volcanic, Tyrannical",
     "Teeming, Explosive, Fortified",
     "Bolstering, Grievous, Tyrannical",
