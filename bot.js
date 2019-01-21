@@ -45,17 +45,17 @@ var debug_channel = 0
 const admin = require('firebase-admin');
 var serviceAccount = require('./bot-swana-firebase-adminsdk-u8zhh-8fa53e0908.json');
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert(serviceAccount)
 });
 var db = admin.firestore();
 
 var question = "";
 var answer = [];
-setInterval(function() {
+setInterval(function () {
     if (clientState != client.state)
         console.log(client.state + " at " + new Date().toString());
     clientState = client.state;
-}, 30000, function(error) { /* handle error */ });
+}, 30000, function (error) { /* handle error */ });
 
 var twitch_template = {
     "stream": {},
@@ -70,7 +70,7 @@ var option = {
 var index = 0;
 // ----------------------------------INTERVAL FUNCTION UPDATE
 // STREAMER-----------------------------------------
-setInterval(function() {
+setInterval(function () {
     if (!client.connected) {
         return console.log("|Discordie| not connected : " + client.state + " at " + new Date().toString());
     } else {
@@ -96,12 +96,12 @@ setInterval(function() {
     var data;
     var data_raw = "";
     var twitch_option = {
-            host: "api.twitch.tv",
-            path: "/kraken/streams/" + name + "?client_id=qxihlu11ef6gpohfhqb9b27d40u6lj",
-            method: 'GET'
-        }
-        /* console.log("URL : " + twitch_option.host + twitch_option.path); */
-    var req = https.request(twitch_option, function(res) {
+        host: "api.twitch.tv",
+        path: "/kraken/streams/" + name + "?client_id=qxihlu11ef6gpohfhqb9b27d40u6lj",
+        method: 'GET'
+    }
+    /* console.log("URL : " + twitch_option.host + twitch_option.path); */
+    var req = https.request(twitch_option, function (res) {
         if (res.statusCode != 200) {
             return console.log("invalide status " + res.statusCode + " at " + new Date().toString());
         }
@@ -111,11 +111,11 @@ setInterval(function() {
         // console.log("twitch refreshed = " +
         // twitch['stream'][name]["refreshed"])
         res.setEncoding('utf8');
-        res.on('data', function(raw) {
+        res.on('data', function (raw) {
             data_raw += raw;
         })
 
-        res.on('end', function() {
+        res.on('end', function () {
             var streamer = {
                 "response": "",
                 "update_time": "",
@@ -277,7 +277,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
 
         case "!dbgListUser":
             var final_str = "";
-            client.Users.forEach(function(elem) {
+            client.Users.forEach(function (elem) {
                 final_str += ("User.id : " + elem.id + " / User.username  : " + elem.username + "\n");
             })
             final_str += ("Channel : " + e.message.channel.id + " / Guilde  : " + e.message.guild.id + "\n");
@@ -289,46 +289,68 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             var comment_string = "";
             var mangeur_list = [];
             var jour = ['', '', '', '', ''];
-            resto_dispo = read_file("./resto.json");
+            // resto_dispo = read_file("./resto.json");
+            
+            var mangeur_counter = [0, 0, 0, 0, 0];
             db.collection('resto').get().then(snapshot => {
                 snapshot.forEach((doc) => {
-                    console.log(doc.data());
-                })
-            });
-            var mangeur_counter = [0, 0, 0, 0, 0];
-            for (var mangeur in resto_dispo) {
-                mangeur_list.push(mangeur);
-                // console.log("resto_dispo : ");
-                // console.log(resto_dispo[mangeur]);
-                arr = resto_dispo[mangeur]['date'].split("").filter(function(item, index, inputArray) { // remove
-                    // duplicate
-                    // day
-                    return inputArray.indexOf(item) == index;
-                });
-                arr.forEach(function(j, index) { // sort day
+                    var mangeur = doc.data();
+
+                    mangeur_list.push(mangeur);
+                    // console.log("resto_dispo : ");
+                    // console.log(resto_dispo[mangeur]);
+                    arr = mangeur['date'].split("").filter(function (item, index, inputArray) { // remove
+                        // duplicate
+                        // day
+                        return inputArray.indexOf(item) == index;
+                    });
+                    arr.forEach(function (j, index) { // sort day
                         if (j <= 5) {
                             // console.log("jour : " + j + " " +
                             // resto_dispo[mangeur]["name"]);
-                            jour[j - 1] += (resto_dispo[mangeur]["name"] + ", ");
+                            jour[j - 1] += (mangeur["name"] + ", ");
                             mangeur_counter[j - 1] += 1;
                         }
                     })
                     // console.log(jour);
-                if ((resto_dispo[mangeur]["comment"] != undefined) && (resto_dispo[mangeur]["comment"] != ''))
-                    comment_string += resto_dispo[mangeur]["name"] + " : " + resto_dispo[mangeur]["comment"] + "\n";
-            }
+                    if ((mangeur["comment"] != undefined) && (mangeur["comment"] != ''))
+                        comment_string += mangeur["name"] + " : " + mangeur["comment"] + "\n";
+                })
+            });
+            // for (var mangeur in resto_dispo) {
+            //     mangeur_list.push(mangeur);
+            //     // console.log("resto_dispo : ");
+            //     // console.log(resto_dispo[mangeur]);
+            //     arr = resto_dispo[mangeur]['date'].split("").filter(function (item, index, inputArray) { // remove
+            //         // duplicate
+            //         // day
+            //         return inputArray.indexOf(item) == index;
+            //     });
+            //     arr.forEach(function (j, index) { // sort day
+            //         if (j <= 5) {
+            //             // console.log("jour : " + j + " " +
+            //             // resto_dispo[mangeur]["name"]);
+            //             jour[j - 1] += (resto_dispo[mangeur]["name"] + ", ");
+            //             mangeur_counter[j - 1] += 1;
+            //         }
+            //     })
+            //     // console.log(jour);
+            //     if ((resto_dispo[mangeur]["comment"] != undefined) && (resto_dispo[mangeur]["comment"] != ''))
+            //         comment_string += resto_dispo[mangeur]["name"] + " : " + resto_dispo[mangeur]["comment"] + "\n";
+            // }
+
             if (mangeur_list === undefined || mangeur_list.length == 0) // return
-            // planing
+                // planing
                 e.message.channel.sendMessage("Personne encore inscrit.\n!disporesto \"jjj\" \"resto\" pour vous inscrire");
             else {
                 // final_string += mangeur_list + " sont dispo pour le
                 // resto\n";
-                jour.forEach(function(elem, index) {
-                        final_string += week_day[index] +
-                            " (" + mangeur_counter[index] + ") : " + elem + "\n";
-                    })
-                    // console.log("final_string : " + final_string +
-                    // comment_string);
+                jour.forEach(function (elem, index) {
+                    final_string += week_day[index] +
+                        " (" + mangeur_counter[index] + ") : " + elem + "\n";
+                })
+                // console.log("final_string : " + final_string +
+                // comment_string);
                 e.message.channel.sendMessage(final_string + comment_string);
             }
 
@@ -338,7 +360,8 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             break;
         case "!resetresto":
             resto_dispo = {};
-            write_file("./resto.json", resto_dispo);
+            // write_file("./resto.json", resto_dispo);
+            db.collection('resto').delete();
             // e.message.channel.sendMessage("planning du resto reset");
             e.message.addReaction("\ud83d\udc4c");
             break;
@@ -351,7 +374,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             var trigger = msg.member.roles.find(fn => fn.name == "Cho2Plé !");
             if (trigger) msg.member.unassignRole(role);
             else msg.member.assignRole(role);
-    	break;
+            break;
         case "!affixe":
         case "!affixes":
             var opts_eu = {
@@ -366,11 +389,11 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             var data_raw = "";
             var today = new Date();
             today.setDate(today.getDate() - 2);
-            var requests = https.request(opts_us, function(res) {
-                res.on('data', function(raw) {
+            var requests = https.request(opts_us, function (res) {
+                res.on('data', function (raw) {
                     data_raw += raw;
                 })
-                res.on('end', function() {
+                res.on('end', function () {
                     data = JSON.parse(data_raw);
                     e.message.channel.sendMessage(" ", false, {
                         color: 0x009900,
@@ -400,7 +423,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
 
                     })
                 });
-                res.on('error', function(e) {
+                res.on('error', function (e) {
                     console.log('problem with request: ' + e.message + " at " + new Date().toString());
                 });
             });
@@ -418,11 +441,11 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                 path: ""
             }
             var data = "";
-            var requests = https.request(opts, function(res) {
-                res.on('data', function(raw) {
+            var requests = https.request(opts, function (res) {
+                res.on('data', function (raw) {
                     data += raw;
                 })
-                res.on('end', function() {
+                res.on('end', function () {
                     data = data.split('id="message">')[1].split('</div>')[0];
                     e.message.channel.sendMessage(" ", false, {
                         color: 0x009900,
@@ -438,7 +461,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                         timestamp: new Date()
                     });
                 });
-                res.on('error', function(e) {
+                res.on('error', function (e) {
                     console.log('problem with request: ' + e.message + " at " + new Date().toString());
                 })
             });
@@ -477,7 +500,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             return false;
         }
         msg.addReaction("\ud83d\udc4c");
-        msg.content.replace("!vote ", "").split(" ").forEach(function(panswer) {
+        msg.content.replace("!vote ", "").split(" ").forEach(function (panswer) {
             for (elem in answer) {
                 if (answer[elem]["reponse"] == panswer) {
                     if (answer[elem]["votant"].indexOf(msg.displayUsername) == -1) {
@@ -494,7 +517,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             var msg = e.message;
             question = msg.content.replace("!votecreate", "").split("-")[0];
             answer = [];
-            msg.content.split("-")[1].split("/").forEach(function(elem, index) {
+            msg.content.split("-")[1].split("/").forEach(function (elem, index) {
                 answer[elem] = [];
                 answer[elem]["reponse"] = elem;
                 answer[elem]["votant"] = "";
@@ -521,17 +544,17 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             case "add":
                 var streamer = msg.content.replace(/^([^ ]+ ){2}/, '').split(" ")[0];
                 var twitch_option = {
-                        host: "api.twitch.tv",
-                        path: "/kraken/channels/" + streamer + "?client_id=qxihlu11ef6gpohfhqb9b27d40u6lj",
-                        method: 'GET'
-                    }
-                    // console.log('streamer = '+streamer);
-                var req = https.request(twitch_option, function(res) {
+                    host: "api.twitch.tv",
+                    path: "/kraken/channels/" + streamer + "?client_id=qxihlu11ef6gpohfhqb9b27d40u6lj",
+                    method: 'GET'
+                }
+                // console.log('streamer = '+streamer);
+                var req = https.request(twitch_option, function (res) {
                     // console.log('STATUS: ' + res.statusCode);
                     // console.log('HEADERS: ' +
                     // JSON.stringify(res.headers));
                     res.setEncoding('utf8');
-                    res.on('data', function(raw) {
+                    res.on('data', function (raw) {
                         raw = JSON.parse(raw);
                         if (raw["error"] == "Not Found") {
                             e.message.channel.sendMessage(raw["message"]);
@@ -544,7 +567,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                             }
                         }
                     })
-                    req.on('error', function(e) {
+                    req.on('error', function (e) {
                         console.log('!addStreamer problem');
                         console.log('problem with request: ' + e.message);
                     });
@@ -568,7 +591,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             case "list":
                 var final_string = "les streams notifiés sont :\n";
                 if (twitch["list"] != undefined)
-                    twitch["list"].forEach(function(elem) {
+                    twitch["list"].forEach(function (elem) {
                         final_string += "> " + elem + "\n"
                     })
 
@@ -604,18 +627,18 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
     if (e.message.content.startsWith("!calendar")) {
         var msg = e.message;
         var noPlayer = 1;
-        var request = http.request(options, function(res) {
+        var request = http.request(options, function (res) {
             var data = '';
-            res.on('data', function(chunk) {
+            res.on('data', function (chunk) {
                 data += chunk;
             });
-            res.on('end', function() {
+            res.on('end', function () {
                 var ret = parse(data);
                 if (ret == undefined)
                     return;
                 if (msg.content.split(" ")[1] == undefined) {
                     var user_upd = [];
-                    ret['tag'].forEach(function(tag, index) {
+                    ret['tag'].forEach(function (tag, index) {
                         if (ret['upd'][index] == undefined) {
                             noPlayer = 0;
                             var user = client.Users.find(u => u.id == tag);
@@ -632,12 +655,12 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                 } else {
                     var name = e.message.content.substr(e.message.content.indexOf(" ") + 1);
                     var final_string = "";
-                    name.split(" ").forEach(function(elem, index) {
+                    name.split(" ").forEach(function (elem, index) {
                         var toto = week_day_calendar.indexOf(elem);
                         if (toto != -1) {
                             var user_dispo_notsur = [],
                                 user_dispo_sur = [];
-                            ret['player'].forEach(function(player, index) {
+                            ret['player'].forEach(function (player, index) {
                                 // console.log('joueur
                                 // : '+player);
                                 // console.log('jour
@@ -670,7 +693,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                 }
 
             });
-            request.on('error', function(e) {
+            request.on('error', function (e) {
                 console.log(e.message);
             });
         });
@@ -749,20 +772,20 @@ function assaults_command(e) {
         encoding: 'ascii'
     }
     var data = "";
-    var requests = https.request(opts, function(res) {
-        res.on('data', function(raw) {
+    var requests = https.request(opts, function (res) {
+        res.on('data', function (raw) {
             data += raw;
         })
-        res.on('end', function() {
-            var zone = data.substring(data.lastIndexOf("<b>")+3, data.lastIndexOf("</b>"));
-            data = data.replace('<br />','\n').replace(/<[^>]+>/g, '').replace(/\t/g, '').replace('&#039;',"'");
+        res.on('end', function () {
+            var zone = data.substring(data.lastIndexOf("<b>") + 3, data.lastIndexOf("</b>"));
+            data = data.replace('<br />', '\n').replace(/<[^>]+>/g, '').replace(/\t/g, '').replace('&#039;', "'");
             var faction_logo = "";
             if (allianceZones.includes(zone)) {
                 faction_logo = alliance_logo;
             } else {
                 faction_logo = horde_logo;
             }
-			
+
             e.message.channel.sendMessage(" ", false, {
                 color: 0x009900,
                 thumbnail: {
@@ -776,7 +799,7 @@ function assaults_command(e) {
                 timestamp: new Date()
             });
         });
-        res.on('error', function(e) {
+        res.on('error', function (e) {
             console.log('Problem with request: ' + e.message + " at " + new Date().toString());
         })
     });
@@ -786,7 +809,7 @@ function assaults_command(e) {
 function write_file(file, obj) {
     try {
         var json = JSON.stringify(obj);
-	fs.writeFileSync(file, json);
+        fs.writeFileSync(file, json);
     } catch (e) {
         console.log('invalid json write' + file);
         console.log(e.message);
@@ -826,7 +849,7 @@ function parse(data) {
         data = data.replace("// API callback\ndoData(", '');
         var subdata = data.substring(-1, data.lastIndexOf(');'));
         subdata = JSON.parse(subdata);
-        subdata.feed.entry.forEach(function(element, index) {
+        subdata.feed.entry.forEach(function (element, index) {
             if (element.gs$cell.row == 1) {
                 if (element.gs$cell.$t == "Updaté") {
                     update_col = element.gs$cell.col;
@@ -873,7 +896,7 @@ function parse(data) {
     }
 }
 
-Array.prototype.inArray = function(comparer) {
+Array.prototype.inArray = function (comparer) {
     for (var i = 0; i < this.length; i++) {
         if (comparer == this[i]) return true;
     }
@@ -882,7 +905,7 @@ Array.prototype.inArray = function(comparer) {
 
 // adds an element to the array if it does not already exist using a comparer
 // function
-Array.prototype.pushIfNotExist = function(element) {
+Array.prototype.pushIfNotExist = function (element) {
     if (!this.inArray(element)) {
         this.push(element);
         return true;
@@ -902,7 +925,7 @@ function Send_debug_msg(message) {
     channels.sendMessage(message);
     channels.sendMessage("!dbgMsg 0 pour enlever le mode débug");
 }
-Date.prototype.getWeek = function() {
+Date.prototype.getWeek = function () {
     var onejan = new Date(this.getFullYear(), 0, 1);
     var today = new Date(this.getFullYear(), this.getMonth(), this.getDate());
     var dayOfYear = ((today - onejan + 1) / 86400000);
@@ -911,8 +934,8 @@ Date.prototype.getWeek = function() {
 
 var http = require('http');
 
-var server = http.createServer(function(req, res) {
-  res.writeHead(200);
-  res.end('Le bot est ' + client.state);
+var server = http.createServer(function (req, res) {
+    res.writeHead(200);
+    res.end('Le bot est ' + client.state);
 });
 server.listen(process.env.PORT || 8080);
