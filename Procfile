@@ -1,1 +1,1 @@
-web: npm start -p $PORT
+process: node bot.js

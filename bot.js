@@ -948,12 +948,12 @@ function deleteQueryBatch(db, query, batchSize, resolve, reject) {
         .catch(reject);
 }
 
-var http = require('http');
+// var http = require('http');
 
-var server = http.createServer(function (req, res) {
-    res.writeHead(200);
-    res.end('Le bot est ' + client.state);
-});
+// var server = http.createServer(function (req, res) {
+//     res.writeHead(200);
+//     res.end('Le bot est ' + client.state);
+// });
 
 
-server.listen(process.env.PORT || 8080);
+// server.listen(process.env.PORT || 8080);
