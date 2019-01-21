@@ -289,8 +289,8 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             var comment_string = "";
             var mangeur_list = [];
             var jour = ['', '', '', '', ''];
-            // resto_dispo = read_file("./resto.json");
-            resto_dispo = db.collection('resto').get().then(snapshot => {
+            resto_dispo = read_file("./resto.json");
+            db.collection('resto').get().then(snapshot => {
                 snapshot.forEach((doc) => {
                     console.log(doc.data());
                 })
