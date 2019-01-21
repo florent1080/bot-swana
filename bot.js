@@ -192,7 +192,7 @@ setInterval(function() {
 
 client.connect({
     // replace this sample token
-    token: "MjgzMjc5OTc3NDY0NzI1NTA0.C44PFQ.OQfJubpFUmK-0LHc2PYPmM5aPNA"
+    token: "MzczNDAwMDgyODEwNDA0ODY1.Dyc0_Q.mFB3GUtVvrzdCVWRojn4NunUKbA"
 });
 /*
  * var twitch = new TwitchApi({ clientId: 'qxihlu11ef6gpohfhqb9b27d40u6lj',
