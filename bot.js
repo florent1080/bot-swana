@@ -41,6 +41,13 @@ var clientState;
 var debug_guild = 0;
 var debug_channel = 0
 
+// Firebase
+const admin = require('firebase-admin');
+admin.initializeApp({
+  credential: admin.credential.applicationDefault()
+});
+var db = admin.firestore();
+
 var question = "";
 var answer = [];
 setInterval(function() {
@@ -716,8 +723,9 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             resto_mangeur['comment'] = comment;
             resto_mangeur['name'] = msg.displayUsername;
             resto_dispo = read_file("./resto.json");
-            resto_dispo[msg.author.mention] = resto_mangeur;
-            write_file("./resto.json", resto_dispo);
+            // resto_dispo[msg.author.mention] = resto_mangeur;
+            db.collection('resto').doc(msg.author.mention).set(resto_mangeur);
+            // write_file("./resto.json", resto_dispo);
             // msg.channel.sendMessage("Sauvegardé !!");
             msg.addReaction("\ud83d\udc4c");
         }
