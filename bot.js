@@ -51,6 +51,11 @@ var db = admin.firestore();
 
 var question = "";
 var answer = [];
+//prevent heroku sleeping
+setInterval(function() {
+    http.get("http://botswana.herokuapp.com");
+}, 300000); // every 5 minutes (300000)
+//*******************/
 setInterval(function () {
     if (clientState != client.state)
         console.log(client.state + " at " + new Date().toString());
