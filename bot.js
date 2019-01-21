@@ -1,5 +1,7 @@
 /*jshint esversion: 6 */
-var Discordie = require("discordie");
+const DDB = require("./postgre");
+DDB.create();
+const Discordie = require("discordie");
 const fs = require('fs');
 var client = new Discordie();
 var url = '/feeds/cells/1qwoWEsV5VGpK9O8GFMMVEDSsCdw5zBedApCHD1igOUM/1/public/values?alt=json-in-script&callback=doData';
