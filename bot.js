@@ -9,7 +9,7 @@ const postgre = new Client({
 });
  
 postgre.connect();
-postgre.query("CREATE TABLE command (index INT NOT NULL AUTO_INCREMENT , PRIMARY KEY (index),cmd TEXT NOT NULL , msg TEXT NOT NULL , author TEXT NOT NULL );", (err, res) => {
+postgre.query("CREATE TABLE command (index INT NOT NULL , PRIMARY KEY (index),cmd TEXT NOT NULL , msg TEXT NOT NULL , author TEXT NOT NULL );", (err, res) => {
   console.log(err ? err.stack : res.rows[0].message) // Hello World!
   postgre.end();
 });
