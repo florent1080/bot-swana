@@ -9,7 +9,7 @@ const https = require('https');
 var week_day = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"];
 var week_day_calendar = ["mer", "jeu", "ven", "sam", "dim", "lun", "mar"];
 var allianceZones = ["Vallée Chantorage", "Rade de Tiragarde", "Drustvar"];
-var twitch_client_ID = "qxihlu11ef6gpohfhqb9b27d40u6lj";
+var twitch_client_ID = "qxihlu11ef6gpohfhqb9b27d40u6lj"; // NOT USED ?
 var twitch_interval = 30000;
 var affixes_list = ["Raging, Volcanic, Tyrannical",
     "Teeming, Explosive, Fortified",
@@ -62,7 +62,7 @@ var twitch_template = {
     "option": {},
     "list": []
 };
-var option = {
+var option = { // NOT USED ?
     "interval": twitch_interval,
     "auto_notif": true,
     "guild": "",
@@ -79,7 +79,7 @@ setInterval(function () {
         };
         client.User.setStatus("online", game);
     }
-    var last_name = "";
+    var last_name = ""; // NOT USED ?
     var twitch = read_file("./twitch.json");
     refreshed_counter = 0;
 
@@ -289,13 +289,11 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             var comment_string = "";
             var mangeur_list = [];
             var jour = ['', '', '', '', ''];
-            // resto_dispo = read_file("./resto.json");
-
             var mangeur_counter = [0, 0, 0, 0, 0];
+            
             db.collection('resto').get().then(snapshot => {
                 snapshot.forEach((doc) => {
                     var mangeur = doc.data();
-                    console.log(mangeur);
                     mangeur_list.push(mangeur);
                     // console.log("resto_dispo : ");
                     // console.log(resto_dispo[mangeur]);
@@ -317,11 +315,9 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                         comment_string += mangeur["name"] + " : " + mangeur["comment"] + "\n";
                 })
             }).then(() => {
-                if (mangeur_list === undefined || mangeur_list.length == 0) { // return
-                    console.log('toto');
+                if (mangeur_list === undefined || mangeur_list.length == 0) // return
                     // planing
                     e.message.channel.sendMessage("Personne encore inscrit.\n!disporesto \"jjj\" \"resto\" pour vous inscrire");
-                }
                 else {
                     // final_string += mangeur_list + " sont dispo pour le
                     // resto\n";
@@ -334,52 +330,12 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                     e.message.channel.sendMessage(final_string + comment_string);
                 }
             });
-            // for (var mangeur in resto_dispo) {
-            //     mangeur_list.push(mangeur);
-            //     // console.log("resto_dispo : ");
-            //     // console.log(resto_dispo[mangeur]);
-            //     arr = resto_dispo[mangeur]['date'].split("").filter(function (item, index, inputArray) { // remove
-            //         // duplicate
-            //         // day
-            //         return inputArray.indexOf(item) == index;
-            //     });
-            //     arr.forEach(function (j, index) { // sort day
-            //         if (j <= 5) {
-            //             // console.log("jour : " + j + " " +
-            //             // resto_dispo[mangeur]["name"]);
-            //             jour[j - 1] += (resto_dispo[mangeur]["name"] + ", ");
-            //             mangeur_counter[j - 1] += 1;
-            //         }
-            //     })
-            //     // console.log(jour);
-            //     if ((resto_dispo[mangeur]["comment"] != undefined) && (resto_dispo[mangeur]["comment"] != ''))
-            //         comment_string += resto_dispo[mangeur]["name"] + " : " + resto_dispo[mangeur]["comment"] + "\n";
-            // }
-
-            // if (mangeur_list === undefined || mangeur_list.length == 0) { // return
-            //     console.log('toto');
-            //     // planing
-            //     e.message.channel.sendMessage("Personne encore inscrit.\n!disporesto \"jjj\" \"resto\" pour vous inscrire");
-            // }
-            // else {
-            //     // final_string += mangeur_list + " sont dispo pour le
-            //     // resto\n";
-            //     jour.forEach(function (elem, index) {
-            //         final_string += week_day[index] +
-            //             " (" + mangeur_counter[index] + ") : " + elem + "\n";
-            //     })
-            //     // console.log("final_string : " + final_string +
-            //     // comment_string);
-            //     e.message.channel.sendMessage(final_string + comment_string);
-            // }
-
             break;
         case "!testresto":
             e.message.channel.sendMessage("!disporesto 1,2,3,4 all");
             break;
         case "!resetresto":
             resto_dispo = {};
-            // write_file("./resto.json", resto_dispo);
             deleteCollection(db, 'resto', 500); 
             // e.message.channel.sendMessage("planning du resto reset");
             e.message.addReaction("\ud83d\udc4c");
@@ -396,7 +352,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             break;
         case "!affixe":
         case "!affixes":
-            var opts_eu = {
+            var opts_eu = { // NOT USED ?
                 host: 'raider.io',
                 path: "/api/v1/mythic-plus/affixes?region=eu"
             };
@@ -770,10 +726,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             resto_mangeur['date'] = date;
             resto_mangeur['comment'] = comment;
             resto_mangeur['name'] = msg.displayUsername;
-            resto_dispo = read_file("./resto.json");
-            // resto_dispo[msg.author.mention] = resto_mangeur;
             db.collection('resto').doc(msg.author.mention).set(resto_mangeur);
-            // write_file("./resto.json", resto_dispo);
             // msg.channel.sendMessage("Sauvegardé !!");
             msg.addReaction("\ud83d\udc4c");
         }
@@ -960,6 +913,7 @@ function deleteCollection(db, collectionPath, batchSize) {
     });
 }
 
+// Firebase tools for deleting one collection
 function deleteQueryBatch(db, query, batchSize, resolve, reject) {
     query
         .get()
