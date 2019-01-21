@@ -894,3 +894,11 @@ Date.prototype.getWeek = function() {
     var dayOfYear = ((today - onejan + 1) / 86400000);
     return Math.ceil(dayOfYear / 7)
 };
+
+var http = require('http');
+
+var server = http.createServer(function(req, res) {
+  res.writeHead(200);
+  res.end('Le bot est ' + client.state);
+});
+server.listen(process.env.PORT || 8080);
