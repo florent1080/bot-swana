@@ -290,12 +290,12 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             var mangeur_list = [];
             var jour = ['', '', '', '', ''];
             // resto_dispo = read_file("./resto.json");
-            
+
             var mangeur_counter = [0, 0, 0, 0, 0];
             db.collection('resto').get().then(snapshot => {
                 snapshot.forEach((doc) => {
                     var mangeur = doc.data();
-
+                    console.log(mangeur);
                     mangeur_list.push(mangeur);
                     // console.log("resto_dispo : ");
                     // console.log(resto_dispo[mangeur]);
@@ -340,6 +340,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             // }
 
             if (mangeur_list === undefined || mangeur_list.length == 0) // return
+                console.log('toto')
                 // planing
                 e.message.channel.sendMessage("Personne encore inscrit.\n!disporesto \"jjj\" \"resto\" pour vous inscrire");
             else {
@@ -361,7 +362,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
         case "!resetresto":
             resto_dispo = {};
             // write_file("./resto.json", resto_dispo);
-            db.collection('resto').delete();
+            deleteCollection(db, 'resto', 500); 
             // e.message.channel.sendMessage("planning du resto reset");
             e.message.addReaction("\ud83d\udc4c");
             break;
@@ -932,10 +933,55 @@ Date.prototype.getWeek = function () {
     return Math.ceil(dayOfYear / 7)
 };
 
+function deleteCollection(db, collectionPath, batchSize) {
+    var collectionRef = db.collection(collectionPath);
+    var query = collectionRef.orderBy('__name__').limit(batchSize);
+
+    return new Promise((resolve, reject) => {
+        deleteQueryBatch(db, query, batchSize, resolve, reject);
+    });
+}
+
+function deleteQueryBatch(db, query, batchSize, resolve, reject) {
+    query
+        .get()
+        .then(snapshot => {
+            // When there are no documents left, we are done
+            if (snapshot.size == 0) {
+                return 0;
+            }
+
+            // Delete documents in a batch
+            var batch = db.batch();
+            snapshot.docs.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+
+            return batch.commit().then(() => {
+                return snapshot.size;
+            });
+        })
+        .then(numDeleted => {
+            if (numDeleted === 0) {
+                resolve();
+                return;
+            }
+
+            // Recurse on the next process tick, to avoid
+            // exploding the stack.
+            process.nextTick(() => {
+                deleteQueryBatch(db, query, batchSize, resolve, reject);
+            });
+        })
+        .catch(reject);
+}
+
 var http = require('http');
 
 var server = http.createServer(function (req, res) {
     res.writeHead(200);
     res.end('Le bot est ' + client.state);
 });
+
+
 server.listen(process.env.PORT || 8080);
