@@ -1,6 +1,18 @@
 /*jshint esversion: 6 */
-const DDB = require("./postgre");
-DDB.create();
+//const DDB = require("./postgre");
+//DDB.create();
+const { DDB } = require('pg');
+
+const postgre = new DDB({
+  connectionString: process.env.DATABASE_URL,
+  ssl: true,
+});
+
+postgre.connect();
+postgre.query("CREATE TABLE 'command' ('index' INT NOT NULL AUTO_INCREMENT , PRIMARY KEY ('index'),'cmd' TEXT NOT NULL , 'msg' TEXT NOT NULL , 'author' TEXT NOT NULL );", (err, res) => {
+  console.log(err ? err.stack : res.rows[0].message) // Hello World!
+  postgre.end();
+});
 const Discordie = require("discordie");
 const fs = require('fs');
 var client = new Discordie();
