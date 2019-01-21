@@ -292,7 +292,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             // resto_dispo = read_file("./resto.json");
             resto_dispo = db.collection('resto').get().then(snapshot => {
                 snapshot.forEach((doc) => {
-                    console.log(doc.data);
+                    console.log(doc.data());
                 })
             });
             var mangeur_counter = [0, 0, 0, 0, 0];
