@@ -291,7 +291,9 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             var jour = ['', '', '', '', ''];
             // resto_dispo = read_file("./resto.json");
             resto_dispo = db.collection('resto').get().then(snapshot => {
-                console.log(snapshot)
+                snapshot.forEach((doc) => {
+                    console.log(doc.data);
+                })
             });
             var mangeur_counter = [0, 0, 0, 0, 0];
             for (var mangeur in resto_dispo) {
