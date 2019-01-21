@@ -1,9 +1,9 @@
 /*jshint esversion: 6 */
 //const DDB = require("./postgre");
 //DDB.create();
-const { DDB } = require('pg');
-
-const postgre = new DDB({
+const { Client } = require('pg');
+ 
+const postgre = new Client({
   connectionString: process.env.DATABASE_URL,
   ssl: true,
 });
