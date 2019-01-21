@@ -339,10 +339,11 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             //         comment_string += resto_dispo[mangeur]["name"] + " : " + resto_dispo[mangeur]["comment"] + "\n";
             // }
 
-            if (mangeur_list === undefined || mangeur_list.length == 0) // return
-                console.log('toto')
+            if (mangeur_list === undefined || mangeur_list.length == 0) { // return
+                console.log('toto');
                 // planing
                 e.message.channel.sendMessage("Personne encore inscrit.\n!disporesto \"jjj\" \"resto\" pour vous inscrire");
+            }
             else {
                 // final_string += mangeur_list + " sont dispo pour le
                 // resto\n";
