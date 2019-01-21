@@ -9,9 +9,7 @@ postgre.connect();
 module.exports = {
 	create: function() {
 		postgre.query("CREATE TABLE 'command' ('index' INT NOT NULL AUTO_INCREMENT , PRIMARY KEY ('index'),'cmd' TEXT NOT NULL , 'msg' TEXT NOT NULL , 'author' TEXT NOT NULL );", (err, res) => {
-		  /*  for (let row of res.rows) {
-			console.log(JSON.stringify(row));
-		  }*/
+		  console.log(err ? err.stack : res.rows[0].message) // Hello World!
 		  postgre.end();
 		});
 	}
