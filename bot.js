@@ -200,7 +200,7 @@ setInterval(function () {
 
 client.connect({
     // replace this sample token
-    token: "MzczNDAwMDgyODEwNDA0ODY1.Dyc0_Q.mFB3GUtVvrzdCVWRojn4NunUKbA"
+    token: process.env.BOT_TOKEN
 });
 /*
  * var twitch = new TwitchApi({ clientId: 'qxihlu11ef6gpohfhqb9b27d40u6lj',
