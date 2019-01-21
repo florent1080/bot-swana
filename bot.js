@@ -43,8 +43,9 @@ var debug_channel = 0
 
 // Firebase
 const admin = require('firebase-admin');
+var serviceAccount = require('bot-swana-firebase-adminsdk-u8zhh-8fa53e0908.json');
 admin.initializeApp({
-  credential: admin.credential.applicationDefault()
+  credential: admin.credential.cert(serviceAccount)
 });
 var db = admin.firestore();
 
