@@ -316,6 +316,23 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                     if ((mangeur["comment"] != undefined) && (mangeur["comment"] != ''))
                         comment_string += mangeur["name"] + " : " + mangeur["comment"] + "\n";
                 })
+            }).then(() => {
+                if (mangeur_list === undefined || mangeur_list.length == 0) { // return
+                    console.log('toto');
+                    // planing
+                    e.message.channel.sendMessage("Personne encore inscrit.\n!disporesto \"jjj\" \"resto\" pour vous inscrire");
+                }
+                else {
+                    // final_string += mangeur_list + " sont dispo pour le
+                    // resto\n";
+                    jour.forEach(function (elem, index) {
+                        final_string += week_day[index] +
+                            " (" + mangeur_counter[index] + ") : " + elem + "\n";
+                    })
+                    // console.log("final_string : " + final_string +
+                    // comment_string);
+                    e.message.channel.sendMessage(final_string + comment_string);
+                }
             });
             // for (var mangeur in resto_dispo) {
             //     mangeur_list.push(mangeur);
@@ -339,22 +356,22 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             //         comment_string += resto_dispo[mangeur]["name"] + " : " + resto_dispo[mangeur]["comment"] + "\n";
             // }
 
-            if (mangeur_list === undefined || mangeur_list.length == 0) { // return
-                console.log('toto');
-                // planing
-                e.message.channel.sendMessage("Personne encore inscrit.\n!disporesto \"jjj\" \"resto\" pour vous inscrire");
-            }
-            else {
-                // final_string += mangeur_list + " sont dispo pour le
-                // resto\n";
-                jour.forEach(function (elem, index) {
-                    final_string += week_day[index] +
-                        " (" + mangeur_counter[index] + ") : " + elem + "\n";
-                })
-                // console.log("final_string : " + final_string +
-                // comment_string);
-                e.message.channel.sendMessage(final_string + comment_string);
-            }
+            // if (mangeur_list === undefined || mangeur_list.length == 0) { // return
+            //     console.log('toto');
+            //     // planing
+            //     e.message.channel.sendMessage("Personne encore inscrit.\n!disporesto \"jjj\" \"resto\" pour vous inscrire");
+            // }
+            // else {
+            //     // final_string += mangeur_list + " sont dispo pour le
+            //     // resto\n";
+            //     jour.forEach(function (elem, index) {
+            //         final_string += week_day[index] +
+            //             " (" + mangeur_counter[index] + ") : " + elem + "\n";
+            //     })
+            //     // console.log("final_string : " + final_string +
+            //     // comment_string);
+            //     e.message.channel.sendMessage(final_string + comment_string);
+            // }
 
             break;
         case "!testresto":
