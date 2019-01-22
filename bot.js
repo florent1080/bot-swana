@@ -23,23 +23,23 @@ var affixes_list = ["Raging, Volcanic, Tyrannical",
     "Sanguine, Grevious, Fortified",
     "Bolstering, Explosive, Tyrannical",
     "Bursting, Quaking, Fortified"
-]
+];
 
 var options = {
     host: 'spreadsheets.google.com',
     path: raidzbub_url
-}
+};
 private_commande = {};
 resto_dispo = {};
 resto_mangeur = {
     "date": "",
     "comment": "",
     "name": ""
-}
+};
 var clientState;
 
 var debug_guild = 0;
-var debug_channel = 0
+var debug_channel = 0;
 
 // Firebase
 const admin = require('firebase-admin');
@@ -57,8 +57,9 @@ var answer = [];
 // }, 300000); // every 5 minutes (300000)
 //*******************/
 setInterval(function () {
-    if (clientState != client.state)
+    if (clientState != client.state) {
         console.log(client.state + " at " + new Date().toString());
+    }
     clientState = client.state;
 }, 30000, function (error) { /* handle error */ });
 
@@ -70,33 +71,30 @@ var twitch_template = {
 var option = { // NOT USED ?
     "interval": twitch_interval,
     "auto_notif": true,
-    "guild": "",
-}
+    "guild": ""
+};
 var index = 0;
 // ----------------------------------INTERVAL FUNCTION UPDATE
 // STREAMER-----------------------------------------
 setInterval(function () {
     if (!client.connected) {
         return console.log("|Discordie| not connected : " + client.state + " at " + new Date().toString());
-    } else {
-        var game = {
-            name: "with !help"
-        };
-        client.User.setStatus("online", game);
     }
+    var game = {
+        name: "with !help"
+    };
+    client.User.setStatus("online", game);
     var last_name = ""; // NOT USED ?
     var twitch = read_file("./twitch.json");
     refreshed_counter = 0;
 
-    // console.log("twitch :" + twitch['list']);
-    if (twitch['list'] == undefined)
+    if (twitch.list === undefined) {
         twitch = twitch_template;
-    var name = twitch['list'][index++];
-    if (index >= twitch['list'].length)
+    }
+    var name = twitch.list[index++];
+    if (index >= twitch.list.length) {
         index = 0;
-    /*
-     * twitch['list'].forEach(function(elem) { var name = elem;
-     */
+    }
     last_name = name;
     var data;
     var data_raw = "";
@@ -104,61 +102,59 @@ setInterval(function () {
         host: "api.twitch.tv",
         path: "/kraken/streams/" + name + "?client_id=qxihlu11ef6gpohfhqb9b27d40u6lj",
         method: 'GET'
-    }
-    /* console.log("URL : " + twitch_option.host + twitch_option.path); */
+    };
     var req = https.request(twitch_option, function (res) {
-        if (res.statusCode != 200) {
+        if (res.statusCode !== 200) {
             return console.log("invalide status " + res.statusCode + " at " + new Date().toString());
         }
-        // console.log('STATUS: ' + res.statusCode);
-        // console.log('HEADERS: ' +
-        // JSON.stringify(res.headers));
-        // console.log("twitch refreshed = " +
-        // twitch['stream'][name]["refreshed"])
         res.setEncoding('utf8');
         res.on('data', function (raw) {
             data_raw += raw;
-        })
+        });
 
         res.on('end', function () {
             var streamer = {
                 "response": "",
                 "update_time": "",
                 "refreshed": ""
-            }
-            streamer['response'] = data_raw;
-            streamer['update_time'] = new Date().toString();
+            };
+            streamer.response = data_raw;
+            streamer.update_time = new Date().toString();
             data = JSON.parse(data_raw);
-            if (data["_links"] == undefined) {
+            if (data._links === undefined) {
                 console.log("invalid data");
                 return console.log(data);
             }
-            name = data["_links"]["self"].split('/');
+            name = data._links.self.split('/');
             name = name[name.length - 1];
-            if (twitch['stream'][name] != undefined) {
-                if (twitch['stream'][name]["refreshed"] == true) {
-                    streamer["refreshed"] = true;
+            if (twitch.stream.name !== undefined) {
+                if (twitch.stream.name.refreshed === true) {
+                    streamer.refreshed = true;
                 } else {
-                    streamer["refreshed"] = false;
+                    streamer.refreshed = false;
                 }
             } else {
-                streamer["refreshed"] = false;
+                streamer.refreshed = false;
             }
-            twitch['stream'][name] = streamer
-            if (data['stream'] != null) {
-                if (twitch['stream'][name]["refreshed"] == false) {
-                    channel = twitch["option"]["channel"];
-                    var guild = client.Guilds.find(g => g.id == twitch["option"]["guild"]);
-                    if (!guild) return console.log("invalid guild");
+            twitch.stream.name = streamer;
+            if (data.stream !== null) {
+                if (twitch.stream.name.refreshed === false) {
+                    channel = twitch.option.channel;
+                    var guild = client.Guilds.find(g => g.id == twitch.option.guild);
+                    if (!guild) {
+                        return console.log("invalid guild");
+                    }
                     var channels = guild.textChannels.find(C => C.id == channel);
-                    if (!channels) return console.log("invalid channel");
+                    if (!channels) {
+                        return console.log("invalid channel");
+                    }
                     console.log(new Date().toString());
                     console.log(data);
-                    if (data["stream"]["channel"]["game"] == "") {
-                        data["stream"]["channel"]["game"] = "...";
+                    if (data.stream.channel.game === "") {
+                        data.stream.channel.game = "...";
                     }
-                    if (data["stream"]["channel"]["status"] == "") {
-                        data["stream"]["channel"]["status"] = "...";
+                    if (data.stream.channel.status === "") {
+                        data.stream.channel.status = "...";
                     }
                     channels.sendMessage(" ", false, {
                         color: 0x009900,
@@ -166,33 +162,31 @@ setInterval(function () {
                             name: name + " is now streaming !",
                             icon_url: "https://images-ext-1.discordapp.net/external/IZEY6CIxPwbBTk-S6KG6WSMxyY5bUEM-annntXfyqbw/https/cdn.discordapp.com/emojis/287637883022737418.png"
                         },
-                        title: data["stream"]["channel"]["url"],
-                        url: data["stream"]["channel"]["url"],
-                        timestamp: data["stream"]["created_at"],
+                        title: data.stream.channel.url,
+                        url: data.stream.channel.url,
+                        timestamp: data.stream.created_at,
                         thumbnail: {
-                            url: data["stream"]["channel"]["logo"],
+                            url: data.stream.channel.logo,
                             height: 80,
                             width: 80
                         },
                         fields: [{
                             name: "Playing",
-                            value: data["stream"]["channel"]["game"]
+                            value: data.stream.channel.game
                         }, {
                             name: "Title",
-                            value: data["stream"]["channel"]["status"]
+                            value: data.stream.channel.status
                         }],
                         footer: {
                             text: "stream online"
                         }
-                    })
-                    console.log("msg send")
-                    twitch['stream'][name]["refreshed"] = true;
-
+                    });
+                    console.log("msg send");
+                    twitch.stream.name.refreshed = true;
                 }
             } else {
-                twitch['stream'][name]["refreshed"] = false;
+                twitch.stream.name.refreshed = false;
             }
-            // if ((++refreshed_counter) == twitch['list'].length)
             write_file("./twitch.json", twitch);
         });
     });
@@ -213,7 +207,6 @@ client.connect({
  * "application/vnd.twitchtv.v5+json", scopes: scope });
  */
 
-
 client.Dispatcher.on("GATEWAY_READY", e => {
     console.log("Connected as: " + client.User.username + " at " + new Date().toString());
     if (client.autoReconnect.enabled) {
@@ -229,19 +222,22 @@ client.Dispatcher.on("DISCONNECTED", e => {
     console.log("error : " + e.error);
     console.log("autoReconnect : " + e.autoReconnect);
     console.log("auto reconnect delay : " + e.delay);
-})
+});
 
 client.Dispatcher.on("MESSAGE_CREATE", e => {
-    // console.log("new msg : "+e.message.content+" from
-    // "+e.message.author.username + " at " + new
-    // Date().toLocaleTimeString());
     if (e.message.author.id == client.User.id) {
         return;
     }
     if (!e.message.content.startsWith('!')) {
         return;
     }
-    switch (e.message.content) {
+    
+    var args = e.message.content.split(' ');
+    var input_command = args[0];
+    args.shift();
+    var msg = e.message;
+    
+    switch (input_command) {
         case "!debug":
             var final_string = "";
             final_string += client.state + " at " + new Date().toLocaleTimeString() + "\n";
@@ -263,15 +259,12 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                 "**!stream cmd** : gere les notifications de stream (!stream help pour plus d'info");
             break;
         case "!helpcommand":
-            // console.log("!helpcommand");
             private_commande = read_file("./command.json");
             var str = "";
-            for (var cmd in private_commande) {
-                str += private_commande[cmd]["cmd"] + " by " + private_commande[cmd]["author"].username + "\n";
-                // console.log(str);
+            for (var prvt_cmd in private_commande) {
+                str += private_commande[prvt_cmd].cmd + " by " + private_commande[prvt_cmd].author.username + "\n";
             }
             e.message.channel.sendMessage(str);
-
             break;
         case "!dev":
             e.message.channel.sendMessage("http://qeled.github.io/discordie/#/docs/Discordie?_k=9oyisd");
@@ -282,62 +275,16 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
         case "!ping":
             e.message.channel.sendMessage(e.message.author.mention + " pong !?");
             break;
-
         case "!dbgListUser":
             var final_str = "";
             client.Users.forEach(function (elem) {
                 final_str += ("User.id : " + elem.id + " / User.username  : " + elem.username + "\n");
-            })
+            });
             final_str += ("Channel : " + e.message.channel.id + " / Guilde  : " + e.message.guild.id + "\n");
             e.message.channel.sendMessage(final_str);
             break;
-
         case "!resto?":
-            var final_string = "";
-            var comment_string = "";
-            var mangeur_list = [];
-            var jour = ['', '', '', '', ''];
-            var mangeur_counter = [0, 0, 0, 0, 0];
-            
-            db.collection('resto').get().then(snapshot => {
-                snapshot.forEach((doc) => {
-                    var mangeur = doc.data();
-                    mangeur_list.push(mangeur);
-                    // console.log("resto_dispo : ");
-                    // console.log(resto_dispo[mangeur]);
-                    arr = mangeur['date'].split("").filter(function (item, index, inputArray) { // remove
-                        // duplicate
-                        // day
-                        return inputArray.indexOf(item) == index;
-                    });
-                    arr.forEach(function (j, index) { // sort day
-                        if (j <= 5) {
-                            // console.log("jour : " + j + " " +
-                            // resto_dispo[mangeur]["name"]);
-                            jour[j - 1] += (mangeur["name"] + ", ");
-                            mangeur_counter[j - 1] += 1;
-                        }
-                    })
-                    // console.log(jour);
-                    if ((mangeur["comment"] != undefined) && (mangeur["comment"] != ''))
-                        comment_string += mangeur["name"] + " : " + mangeur["comment"] + "\n";
-                })
-            }).then(() => {
-                if (mangeur_list === undefined || mangeur_list.length == 0) // return
-                    // planing
-                    e.message.channel.sendMessage("Personne encore inscrit.\n!disporesto \"jjj\" \"resto\" pour vous inscrire");
-                else {
-                    // final_string += mangeur_list + " sont dispo pour le
-                    // resto\n";
-                    jour.forEach(function (elem, index) {
-                        final_string += week_day[index] +
-                            " (" + mangeur_counter[index] + ") : " + elem + "\n";
-                    })
-                    // console.log("final_string : " + final_string +
-                    // comment_string);
-                    e.message.channel.sendMessage(final_string + comment_string);
-                }
-            });
+            displayrestodispo_command(e);
             break;
         case "!testresto":
             e.message.channel.sendMessage("!disporesto 1,2,3,4 all");
@@ -345,72 +292,22 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
         case "!resetresto":
             resto_dispo = {};
             deleteCollection(db, 'resto', 500); 
-            // e.message.channel.sendMessage("planning du resto reset");
             e.message.addReaction("\ud83d\udc4c");
             break;
-
         case "!cho2plé":
         case "!Goplay":
         case "!goplay":
-            var msg = e.message;
             var role = msg.guild.roles.find(fn => fn.name == "Cho2Plé !");
             var trigger = msg.member.roles.find(fn => fn.name == "Cho2Plé !");
-            if (trigger) msg.member.unassignRole(role);
-            else msg.member.assignRole(role);
+            if (trigger) {
+                msg.member.unassignRole(role);
+            } else {
+                msg.member.assignRole(role);
+            }
             break;
         case "!affixe":
         case "!affixes":
-            var opts_eu = { // NOT USED ?
-                host: 'raider.io',
-                path: "/api/v1/mythic-plus/affixes?region=eu"
-            };
-            var opts_us = {
-                host: 'raider.io',
-                path: "/api/v1/mythic-plus/affixes?region=us"
-            };
-            var data;
-            var data_raw = "";
-            var today = new Date();
-            today.setDate(today.getDate() - 2);
-            var requests = https.request(opts_us, function (res) {
-                res.on('data', function (raw) {
-                    data_raw += raw;
-                })
-                res.on('end', function () {
-                    data = JSON.parse(data_raw);
-                    e.message.channel.sendMessage(" ", false, {
-                        color: 0x009900,
-                        author: {
-                            name: data["title"],
-                            icon_url: "http://wow.zamimg.com/images/wow/icons/large/inv_relics_hourglass.jpg"
-                        },
-
-                        title: "https://mythicpl.us",
-                        url: "https://mythicpl.us",
-                        fields: [{
-                            name: "(+2) " + data["affix_details"][0]["name"],
-                            value: data["affix_details"][0]["description"]
-                        }, {
-                            name: "(+4) " + data["affix_details"][1]["name"],
-                            value: data["affix_details"][1]["description"]
-                        }, {
-                            name: "(+7) " + data["affix_details"][2]["name"],
-                            value: data["affix_details"][2]["description"]
-                        }, {
-                            name: "(+10) " + data["affix_details"][3]["name"],
-                            value: data["affix_details"][3]["description"]
-                        }, {
-                            name: "Next Week",
-                            value: "*" + affixes_list[(today.getWeek() + 4) % 12] + "*"
-                        }]
-
-                    })
-                });
-                res.on('error', function (e) {
-                    console.log('problem with request: ' + e.message + " at " + new Date().toString());
-                });
-            });
-            requests.end();
+            affixes_command(e);
             break;
         case "!assaut":
         case "!assault":
@@ -420,348 +317,435 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
         case "!inva":
         case "!invasions":
         case "!invasion":
-            var opts = {
-                host: 'invasion.wisak.me',
-                path: ""
-            }
-            var data = "";
-            var requests = https.request(opts, function (res) {
-                res.on('data', function (raw) {
-                    data += raw;
-                })
-                res.on('end', function () {
-                    data = data.split('id="message">')[1].split('</div>')[0];
-                    e.message.channel.sendMessage(" ", false, {
-                        color: 0x009900,
-                        thumbnail: {
-                            url: "https://invasion.wisak.me/img/legion.png"
-                        },
-                        author: {
-                            name: data,
-                            icon_url: "https://invasion.wisak.me/img/legion.png"
-                        },
-                        title: "invasion.wisak.me",
-                        url: "http://invasion.wisak.me",
-                        timestamp: new Date()
-                    });
-                });
-                res.on('error', function (e) {
-                    console.log('problem with request: ' + e.message + " at " + new Date().toString());
-                })
-            });
-            requests.end();
+            invasion_command(e);
             break;
         case "!vote?":
-            if (question != "") {
+            if (question !== "") {
                 var finale_str = question + " ?\n";
-                for (elem in answer) {
-                    if (answer[elem]["reponse"] != undefined) {
-                        finale_str += answer[elem]["reponse"] + " : " + answer[elem]["count"] + "\n";
-                        finale_str += answer[elem]["votant"] + "\n";
+                for (var elem in answer) {
+                    if (answer.elem.reponse !== undefined) {
+                        finale_str += answer.elem.reponse + " : " + answer.elem.count + "\n";
+                        finale_str += answer.elem.votant + "\n";
                     }
                 }
                 e.message.channel.sendMessage(finale_str);
             } else {
-                e.message.channel.sendMessage("Pas de vote en cour \"!votecreate\" pour créer un nouveau vote")
+                e.message.channel.sendMessage("Pas de vote en cours, \"!votecreate\" pour créer un nouveau vote");
             }
             break;
         case "!votereset":
-            e.message.addReaction("\ud83d\udc4c");
             question = "";
             answer = [];
+            e.message.addReaction("\ud83d\udc4c");
+            break;
+        case "!vote":
+            if (question === "") {
+                msg.channel.sendMessage("Pas de vote en cours, \"!votecreate\" pour créer un nouveau vote");
+                return false;
+            }
+            msg.addReaction("\ud83d\udc4c");
+            args.forEach(function (panswer) {
+                for (var elem in answer) {
+                    if (answer.elem.reponse == panswer) {
+                        if (answer.elem.votant.indexOf(msg.displayUsername) == -1) {
+                            answer.elem.votant += msg.displayUsername + ", ";
+                            answer.elem.count += 1;
+                        }
+                    }
+                }
+            });
+            break;
+        case "!votecreate":
+            try {
+                question = msg.content.replace("!votecreate", "").split("-")[0];
+                answer = [];
+                msg.content.split("-")[1].split("/").forEach(function (elem, index) {
+                    answer[elem] = [];
+                    answer[elem].reponse = elem;
+                    answer[elem].votant = "";
+                    answer[elem].count = 0;
+                });
+                msg.addReaction("\ud83d\udc4c");
+            } catch (erno) {
+                e.message.channel.sendMessage("Erreur sur la commande **\"!votecreate\"**");
+            }
+            break;
+        case "!stream":
+            stream_command(e, args);
+            break;
+        case "!dbgMsg":
+            if (args[0] == "0") {
+                debug_guild = 0;
+                return;
+            }
+            debug_guild = e.message.guild.id;
+            debug_channel = e.message.channel.id;
+            e.message.channel.sendMessage("saved on " + debug_guild + " " + debug_channel);
+            break;
+        case "!calendar":
+            calendar_command(e, args);
+            break;
+        case "!createcommand":
+            var command = {
+                "cmd": "",
+                "msg": "",
+                "author": ""
+            };
+            
+            command.cmd = args[0];
+            if (command.cmd.startsWith('!')) {
+                msg.channel.sendMessage("Je m'occupe de rajouter le ! tkt. (Commande non créée)");
+                return;
+            }
+            command.msg = msg.content.replace(/^([^ ]+ ){2}/, '');
+            command.author = e.message.author;
+            
+            private_command = read_file("./command.json");
+            if (private_command['!' + command.cmd] !== undefined) {
+                msg.channel.sendMessage("La commande !" + command.cmd + " existe déjà.");
+            } else {
+                private_command['!' + command.cmd] = command;
+                write_file("./command.json", private_command);
+                msg.channel.sendMessage("La commande !" + command.cmd + " a été créée.");
+            }
+            break;
+        case "!removecommand":
+            var command_to_remove = args[0];
+            private_command = read_file("./command.json");
+            if (private_command['!' + command_to_remove] === undefined) {
+                msg.channel.sendMessage("La commande !" + command_to_remove + " n'existe pas.");
+            } else {
+                delete private_command['!' + command_to_remove];
+                write_file("./command.json", private_command);
+                msg.channel.sendMessage("La commande !" + command_to_remove + " a été supprimée");
+            }
+            break;
+        case "!botname":
+            var name = e.message.content.substr(e.message.content.indexOf(" ") + 1);
+            client.User.setUsername(name);
+            e.message.channel.sendMessage("hoooo yeeaaaa " + name + " débarque !!");
+            break;
+        case "!disporesto":
+            var date = args[0];
+            var comment = "";
+            if (args[1] !== undefined) {
+                comment = msg.content.replace(/^([^ ]+ ){2}/, ''); // remove 2
+            }
+            // st words
+            if ((date === undefined) /* ||( resto == undefined) */ ) {
+                msg.channel.sendMessage("erreur sur la commande");
+            } else {
+                resto_mangeur.date = date;
+                resto_mangeur.comment = comment;
+                resto_mangeur.name = msg.displayUsername;
+                db.collection('resto').doc(msg.author.mention).set(resto_mangeur);
+                msg.addReaction("\ud83d\udc4c");
+            }
             break;
         default:
-            private_commande = read_file("./command.json");
-            if (private_commande[e.message.content] != undefined) {
-                e.message.channel.sendMessage(private_commande[e.message.content]["msg"]);
+            private_command = read_file("./command.json");
+            if (private_command[e.message.content] !== undefined) {
+                e.message.channel.sendMessage(private_command[e.message.content].msg);
             }
             break;
     }
-    if (e.message.content.startsWith("!vote ")) {
-        var msg = e.message;
-        if (question == "") {
-            e.message.channel.sendMessage("Pas de vote en cour \"!votecreate\" pour créer un nouveau vote")
-            return false;
-        }
-        msg.addReaction("\ud83d\udc4c");
-        msg.content.replace("!vote ", "").split(" ").forEach(function (panswer) {
-            for (elem in answer) {
-                if (answer[elem]["reponse"] == panswer) {
-                    if (answer[elem]["votant"].indexOf(msg.displayUsername) == -1) {
-                        answer[elem]["votant"] += msg.displayUsername + ", ";
-                        answer[elem]["count"] += 1;
-                    }
-                }
-            }
-        })
-
-    }
-    if (e.message.content.startsWith("!votecreate")) {
-        try {
-            var msg = e.message;
-            question = msg.content.replace("!votecreate", "").split("-")[0];
-            answer = [];
-            msg.content.split("-")[1].split("/").forEach(function (elem, index) {
-                answer[elem] = [];
-                answer[elem]["reponse"] = elem;
-                answer[elem]["votant"] = "";
-                answer[elem]["count"] = 0;
-            });
-            msg.addReaction("\ud83d\udc4c");
-        } catch (erno) {
-            e.message.channel.sendMessage("erreur sur la commande **\"!votecreate\"**")
-        }
-    }
-    if (e.message.content.startsWith("!stream")) {
-        var msg = e.message;
-        var cmd = msg.content.split(" ")[1];
-        var twitch = read_file("./twitch.json");
-        if (twitch['list'] == undefined)
-            twitch = twitch_template;
-        switch (cmd) {
-            case "help":
-                e.message.channel.sendMessage("**!stream add channel** : ajoute le channel twitch à la liste de notification\n" +
-                    "**!stream channel #channel** : change le channel discord de notification\n" +
-                    "**!stream remove channel** : supprime un channel twitch de la liste de notification\n" +
-                    "**!stream list** : liste les channel enregistré");
-                break;
-            case "add":
-                var streamer = msg.content.replace(/^([^ ]+ ){2}/, '').split(" ")[0];
-                var twitch_option = {
-                    host: "api.twitch.tv",
-                    path: "/kraken/channels/" + streamer + "?client_id=qxihlu11ef6gpohfhqb9b27d40u6lj",
-                    method: 'GET'
-                }
-                // console.log('streamer = '+streamer);
-                var req = https.request(twitch_option, function (res) {
-                    // console.log('STATUS: ' + res.statusCode);
-                    // console.log('HEADERS: ' +
-                    // JSON.stringify(res.headers));
-                    res.setEncoding('utf8');
-                    res.on('data', function (raw) {
-                        raw = JSON.parse(raw);
-                        if (raw["error"] == "Not Found") {
-                            e.message.channel.sendMessage(raw["message"]);
-                        } else {
-                            if (twitch['list'].pushIfNotExist(streamer)) {
-                                write_file("./twitch.json", twitch);
-                                e.message.channel.sendMessage(raw["display_name"] + ' add to your list');
-                            } else {
-                                e.message.channel.sendMessage(streamer + " is already in your list");
-                            }
-                        }
-                    })
-                    req.on('error', function (e) {
-                        console.log('!addStreamer problem');
-                        console.log('problem with request: ' + e.message);
-                    });
-                })
-                req.end();
-                break;
-            case "remove":
-                if (twitch["list"] != undefined) {
-                    var name = msg.content.replace(/^([^ ]+ ){2}/, '').split(" ")[0];
-                    var index = twitch['list'].indexOf(name);
-                    if (index > -1) {
-                        twitch['list'].splice(index, 1);
-                        msg.channel.sendMessage(name + " a était supprimé de la liste");
-                        twitch["stream"][name] = "";
-                    } else {
-                        msg.channel.sendMessage("le channel n'est pas dans la liste");
-                    }
-                    write_file("./twitch.json", twitch);
-                }
-                break;
-            case "list":
-                var final_string = "les streams notifiés sont :\n";
-                if (twitch["list"] != undefined)
-                    twitch["list"].forEach(function (elem) {
-                        final_string += "> " + elem + "\n"
-                    })
-
-                msg.channel.sendMessage(final_string);
-                break;
-            case "notify":
-                break;
-            case "channel":
-                var channel = msg.content.replace(/^([^ ]+ ){2}/, '').split(" ")[0];
-                msg.channel.sendMessage(">les notifications sont activées sur les channels :\n" + channel)
-                channel = channel.replace(/[^\/\d]/g, '');
-                twitch["option"]["guild"] = msg.guild.id;
-                twitch["option"]["channel"] = channel;
-                write_file("./twitch.json", twitch);
-                break;
-
-            default:
-                msg.channel.sendMessage("commande non comprise \n**!stream help** pour la liste des commandes de stream disponibles")
-                break;
-        }
-
-    }
-    if (e.message.content.startsWith("!dbgMsg")) {
-        var msg = e.message;
-        if (msg.content.split(" ")[1] == "0") {
-            debug_guild = 0;
-            return;
-        }
-        debug_guild = e.message.guild.id;
-        debug_channel = e.message.channel.id;
-        e.message.channel.sendMessage("saved on " + debug_guild + " " + debug_channel);
-    }
-    if (e.message.content.startsWith("!calendar")) {
-        var msg = e.message;
-        var noPlayer = 1;
-        var request = http.request(options, function (res) {
-            var data = '';
-            res.on('data', function (chunk) {
-                data += chunk;
-            });
-            res.on('end', function () {
-                var ret = parse(data);
-                if (ret == undefined)
-                    return;
-                if (msg.content.split(" ")[1] == undefined) {
-                    var user_upd = [];
-                    ret['tag'].forEach(function (tag, index) {
-                        if (ret['upd'][index] == undefined) {
-                            noPlayer = 0;
-                            var user = client.Users.find(u => u.id == tag);
-                            if (!user)
-                                user_upd.push(player);
-                            else
-                                user_upd.push(user.mention);
-                        }
-                    });
-                    if (noPlayer)
-                        e.message.channel.sendMessage("tout le monde a rempli");
-                    else
-                        e.message.channel.sendMessage(user_upd + " merci de remplir le calendrier\n<https://docs.google.com/spreadsheets/d/1am4oo8wq7Ho_cJ4KoQpa1hotCbsjwYCwMylAGovy-Bs/edit#gid=0>");
-                } else {
-                    var name = e.message.content.substr(e.message.content.indexOf(" ") + 1);
-                    var final_string = "";
-                    name.split(" ").forEach(function (elem, index) {
-                        var toto = week_day_calendar.indexOf(elem);
-                        if (toto != -1) {
-                            var user_dispo_notsur = [],
-                                user_dispo_sur = [];
-                            ret['player'].forEach(function (player, index) {
-                                // console.log('joueur
-                                // : '+player);
-                                // console.log('jour
-                                // :
-                                // '+ret["jour"][index]);
-                                if (ret["jour"][index] != undefined) {
-                                    if (ret["jour"][index][toto] == 'x') {
-                                        user_dispo_sur.push(player);
-                                    } else if (ret["jour"][index][toto] != undefined) {
-                                        user_dispo_notsur.push(player);
-                                    } else {}
-                                }
-                            });
-                            if ((user_dispo_notsur.length <= 0) && (user_dispo_sur.length <= 0))
-                                final_string += "tous des tafioles le " + elem + "\n";
-                            else
-                                final_string += "le " + elem + " : \n";
-                            if (user_dispo_sur.length == 1)
-                                final_string += user_dispo_sur + " beaucoup trop motivé\n";
-                            else if (user_dispo_sur.length > 0)
-                                final_string += user_dispo_sur + " sont chauds bouillants.\n";
-
-                            if (user_dispo_notsur.length > 0)
-                                final_string += user_dispo_notsur + " y a moyen mais faut de la qualité\n";
-                        } else {
-                            final_string += '\"' + elem + '\" jour inconnu utilisé : lun,mar,mer,jeu,ven,sam,dim\n';
-                        }
-                    })
-                    e.message.channel.sendMessage(final_string);
-                }
-
-            });
-            request.on('error', function (e) {
-                console.log(e.message);
-            });
-        });
-        request.end();
-    }
-    if (e.message.content.startsWith("!createcommand")) {
-        var msg = e.message;
-        var command = {
-            "cmd": "",
-            "msg": "",
-            "author": ""
-        }
-        var str = command["msg"] = msg.content.replace(/^([^ ]+ ){2}/, ''); // remove
-        // 2
-        // 1st
-        // words
-        command["cmd"] = msg.content.split(" ")[1];
-        if (command["cmd"].startsWith('!')) {
-            msg.channel.sendMessage("Je m'occupe de rajouter le ! tkt. (Commande non créée)");
-            return;
-        }
-        command["author"] = e.message.author;
-        private_commande = read_file("./command.json");
-        if (private_commande['!' + command["cmd"]] !== undefined) {
-            msg.channel.sendMessage("La commande !" + cmd + " existe déjà.");
-        } else {
-            private_commande['!' + command["cmd"]] = command;
-            write_file("./command.json", private_commande);
-            msg.channel.sendMessage("La commande !" + command["cmd"] + " a été créée.");
-        }
-    }
-    if (e.message.content.startsWith("!removecommand")) {
-        var msg = e.message;
-        var cmd = msg.content.split(" ")[1];
-        private_commande = read_file("./command.json");
-        if (private_commande['!' + cmd] === undefined) {
-            msg.channel.sendMessage("La commande !" + cmd + " n'existe pas.");
-        } else {
-            delete private_commande['!' + cmd];
-            write_file("./command.json", private_commande);
-            msg.channel.sendMessage("La commande !" + cmd + " a été supprimée");
-        }
-    }
-    if (e.message.content.startsWith("!botname")) {
-        var name = e.message.content.substr(e.message.content.indexOf(" ") + 1);
-        client.User.setUsername(name);
-        e.message.channel.sendMessage("hoooo yeeaaaa " + name + " débarque !!");
-    }
-    if (e.message.content.startsWith("!disporesto")) {
-        var msg = e.message;
-        var date = msg.content.split(" ")[1];
-        var comment = "";
-        if (msg.content.split(" ")[2] != undefined)
-            comment = msg.content.replace(/^([^ ]+ ){2}/, ''); // remove 2
-        // st words
-        if ((date == undefined) /* ||( resto == undefined) */ ) {
-            // console.log("erreur resto");
-            msg.channel.sendMessage("erreur sur la commande");
-        } else {
-            resto_mangeur['date'] = date;
-            resto_mangeur['comment'] = comment;
-            resto_mangeur['name'] = msg.displayUsername;
-            db.collection('resto').doc(msg.author.mention).set(resto_mangeur);
-            // msg.channel.sendMessage("Sauvegardé !!");
-            msg.addReaction("\ud83d\udc4c");
-        }
-    }
-
 });
 
-function assaults_command(e) {
-    var alliance_logo = "https://d1u5p3l4wpay3k.cloudfront.net/wowpedia/thumb/6/60/AllianceLogo.png/358px-AllianceLogo.png"
-    var horde_logo = "https://d1u5p3l4wpay3k.cloudfront.net/wowpedia/thumb/e/e2/HordeLogo.png/473px-HordeLogo.png"
+function displayrestodispo_command(e) {
+    var final_string = "";
+    var comment_string = "";
+    var mangeur_list = [];
+    var jour = ['', '', '', '', ''];
+    var mangeur_counter = [0, 0, 0, 0, 0];
+    
+    db.collection('resto').get().then(snapshot => {
+        snapshot.forEach((doc) => {
+            var mangeur = doc.data();
+            mangeur_list.push(mangeur);
+            arr = mangeur.date.split("").filter(function (item, index, inputArray) { // remove duplicate day
+                return inputArray.indexOf(item) == index;
+            });
+            arr.forEach(function (j, index) { // sort day
+                if (j <= 5) {
+                    jour[j - 1] += (mangeur.name + ", ");
+                    mangeur_counter[j - 1] += 1;
+                }
+            });
+            if ((mangeur.comment !== undefined) && (mangeur.comment !== '')) {
+                comment_string += mangeur.name + " : " + mangeur.comment + "\n";
+            }
+        });
+    }).then(() => {
+        if (mangeur_list === undefined || mangeur_list.length === 0) { // return planning
+            e.message.channel.sendMessage("Personne encore inscrit.\n!disporesto \"jjj\" \"resto\" pour vous inscrire");
+        } else {
+            jour.forEach(function (elem, index) {
+                final_string += week_day[index] +
+                    " (" + mangeur_counter[index] + ") : " + elem + "\n";
+            });
+            e.message.channel.sendMessage(final_string + comment_string);
+        }
+    });
+}
+
+function invasion_command(e) {
     var opts = {
-        host: 'www.mamytwink.com',
-        path: "/assauts-bfa",
-        method: "GET",
-        encoding: 'ascii'
-    }
+        host: 'invasion.wisak.me',
+        path: ""
+    };
     var data = "";
     var requests = https.request(opts, function (res) {
         res.on('data', function (raw) {
             data += raw;
-        })
+        });
+        res.on('end', function () {
+            data = data.split('id="message">')[1].split('</div>')[0];
+            e.message.channel.sendMessage(" ", false, {
+                color: 0x009900,
+                thumbnail: {
+                    url: "https://invasion.wisak.me/img/legion.png"
+                },
+                author: {
+                    name: data,
+                    icon_url: "https://invasion.wisak.me/img/legion.png"
+                },
+                title: "invasion.wisak.me",
+                url: "http://invasion.wisak.me",
+                timestamp: new Date()
+            });
+        });
+        res.on('error', function (e) {
+            console.log('problem with request: ' + e.message + " at " + new Date().toString());
+        });
+    });
+    requests.end();
+}
+
+function affixes_command(e) {
+    var opts_eu = { // NOT USED ?
+        host: 'raider.io',
+        path: "/api/v1/mythic-plus/affixes?region=eu"
+    };
+    var opts_us = {
+        host: 'raider.io',
+        path: "/api/v1/mythic-plus/affixes?region=us"
+    };
+    var data;
+    var data_raw = "";
+    var today = new Date();
+    today.setDate(today.getDate() - 2);
+    var requests = https.request(opts_us, function (res) {
+        res.on('data', function (raw) {
+            data_raw += raw;
+        });
+        res.on('end', function () {
+            data = JSON.parse(data_raw);
+            e.message.channel.sendMessage(" ", false, {
+                color: 0x009900,
+                author: {
+                    name: data.title,
+                    icon_url: "http://wow.zamimg.com/images/wow/icons/large/inv_relics_hourglass.jpg"
+                },
+
+                title: "https://mythicpl.us",
+                url: "https://mythicpl.us",
+                fields: [{
+                    name: "(+2) " + data.affix_details[0].name,
+                    value: data.affix_details[0].description
+                }, {
+                    name: "(+4) " + data.affix_details[1].name,
+                    value: data.affix_details[1].description
+                }, {
+                    name: "(+7) " + data.affix_details[2].name,
+                    value: data.affix_details[2].description
+                }, {
+                    name: "(+10) " + data.affix_details[3].name,
+                    value: data.affix_details[3].description
+                }, {
+                    name: "Next Week",
+                    value: "*" + affixes_list[(today.getWeek() + 4) % 12] + "*"
+                }]
+
+            });
+        });
+        res.on('error', function (e) {
+            console.log('problem with request: ' + e.message + " at " + new Date().toString());
+        });
+    });
+    requests.end();    
+}
+
+function stream_command(e, args) {
+    var msg = e.message;
+    var cmd = args[0];
+    var twitch = read_file("./twitch.json");
+    if (twitch.list === undefined) {
+        twitch = twitch_template;
+    }
+    switch (cmd) {
+        case "help":
+            e.message.channel.sendMessage("**!stream add channel** : ajoute le channel twitch à la liste de notification\n" +
+                "**!stream channel #channel** : change le channel discord de notification\n" +
+                "**!stream remove channel** : supprime un channel twitch de la liste de notification\n" +
+                "**!stream list** : liste les channel enregistré");
+            break;
+        case "add":
+            var streamer = msg.content.replace(/^([^ ]+ ){2}/, '').split(" ")[0];
+            var twitch_option = {
+                host: "api.twitch.tv",
+                path: "/kraken/channels/" + streamer + "?client_id=qxihlu11ef6gpohfhqb9b27d40u6lj",
+                method: "GET"
+            };
+            var req = https.request(twitch_option, function (res) {
+                res.setEncoding('utf8');
+                res.on('data', function (raw) {
+                    raw = JSON.parse(raw);
+                    if (raw.error == "Not Found") {
+                        e.message.channel.sendMessage(raw.message);
+                    } else {
+                        if (twitch.list.pushIfNotExist(streamer)) {
+                            write_file("./twitch.json", twitch);
+                            e.message.channel.sendMessage(raw.display_name + ' add to your list');
+                        } else {
+                            e.message.channel.sendMessage(streamer + " is already in your list");
+                        }
+                    }
+                });
+                req.on("error", function (e) {
+                    console.log('!addStreamer problem');
+                    console.log('problem with request: ' + e.message);
+                });
+            });
+            req.end();
+            break;
+        case "remove":
+            if (twitch.list !== undefined) {
+                var name = msg.content.replace(/^([^ ]+ ){2}/, '').split(" ")[0];
+                var index = twitch.list.indexOf(name);
+                if (index > -1) {
+                    twitch.list.splice(index, 1);
+                    msg.channel.sendMessage(name + " a été supprimé de la liste");
+                    twitch.stream[name] = "";
+                } else {
+                    msg.channel.sendMessage("le channel n'est pas dans la liste");
+                }
+                write_file("./twitch.json", twitch);
+            }
+            break;
+        case "list":
+            var final_string = "les streams notifiés sont :\n";
+            if (twitch.list !== undefined) {
+                twitch.list.forEach(function (elem) {
+                    final_string += "> " + elem + "\n";
+                });
+            }
+            msg.channel.sendMessage(final_string);
+            break;
+        case "notify":
+            break;
+        case "channel":
+            var channel = msg.content.replace(/^([^ ]+ ){2}/, '').split(" ")[0];
+            msg.channel.sendMessage(">les notifications sont activées sur les channels :\n" + channel);
+            channel = channel.replace(/[^\/\d]/g, '');
+            twitch.option.guild = msg.guild.id;
+            twitch.option.channel = channel;
+            write_file("./twitch.json", twitch);
+            break;
+        default:
+            msg.channel.sendMessage("commande non comprise \n**!stream help** pour la liste des commandes de stream disponibles");
+            break;
+    }
+}
+
+function calendar_command(e, args) {
+    var msg = e.message;
+    var noPlayer = 1;
+    var request = http.request(options, function (res) {
+        var data = '';
+        res.on('data', function (chunk) {
+            data += chunk;
+        });
+        res.on('end', function () {
+            var ret = parse(data);
+            if (ret === undefined) {
+                return;
+            }
+            if (args[0] === undefined) {
+                var user_upd = [];
+                ret.tag.forEach(function (tag, index) {
+                    if (ret.upd[index] === undefined) {
+                        noPlayer = 0;
+                        var user = client.Users.find(u => u.id == tag);
+                        if (!user) {
+                            user_upd.push(player);
+                        } else {
+                            user_upd.push(user.mention);
+                        }
+                    }
+                });
+                if (noPlayer) {
+                    e.message.channel.sendMessage("tout le monde a rempli");
+                } else {
+                    e.message.channel.sendMessage(user_upd + " merci de remplir le calendrier\n<https://docs.google.com/spreadsheets/d/1am4oo8wq7Ho_cJ4KoQpa1hotCbsjwYCwMylAGovy-Bs/edit#gid=0>");
+                }
+            } else {
+                var name = e.message.content.substr(e.message.content.indexOf(" ") + 1);
+                var final_string = "";
+                name.split(" ").forEach(function (elem, index) {
+                    var toto = week_day_calendar.indexOf(elem);
+                    if (toto != -1) {
+                        var user_dispo_notsur = [],
+                            user_dispo_sur = [];
+                        ret.player.forEach(function (player, index) {
+                            if (ret.jour[index] !== undefined) {
+                                if (ret.jour[index][toto] == 'x') {
+                                    user_dispo_sur.push(player);
+                                } else if (ret.jour[index][toto] !== undefined) {
+                                    user_dispo_notsur.push(player);
+                                }
+                            }
+                        });
+                        if ((user_dispo_notsur.length <= 0) && (user_dispo_sur.length <= 0)) {
+                            final_string += "tous des tafioles le " + elem + "\n";
+                        } else {
+                            final_string += "le " + elem + " : \n";
+                        }
+                        if (user_dispo_sur.length == 1) {
+                            final_string += user_dispo_sur + " beaucoup trop motivé\n";
+                        } else if (user_dispo_sur.length > 0) {
+                            final_string += user_dispo_sur + " sont chauds bouillants.\n";
+                        }
+                        if (user_dispo_notsur.length > 0) {
+                            final_string += user_dispo_notsur + " y a moyen mais faut de la qualité\n";
+                        }
+                    } else {
+                        final_string += '\"' + elem + '\" jour inconnu utilisé : lun,mar,mer,jeu,ven,sam,dim\n';
+                    }
+                });
+                e.message.channel.sendMessage(final_string);
+            }
+        });
+        request.on('error', function (e) {
+            console.log(e.message);
+        });
+    });
+    request.end();
+}
+
+function assaults_command(e) {
+    var alliance_logo = "https://d1u5p3l4wpay3k.cloudfront.net/wowpedia/thumb/6/60/AllianceLogo.png/358px-AllianceLogo.png";
+    var horde_logo = "https://d1u5p3l4wpay3k.cloudfront.net/wowpedia/thumb/e/e2/HordeLogo.png/473px-HordeLogo.png";
+    var opts = {
+        host: 'www.mamytwink.com',
+        path: "/assauts-bfa",
+        method: "GET",
+        encoding: "ascii"
+    };
+    var data = "";
+    var requests = https.request(opts, function (res) {
+        res.on('data', function (raw) {
+            data += raw;
+        });
         res.on('end', function () {
             var zone = data.substring(data.indexOf("<b>") + 3, data.indexOf("</b>"));
             data = data.replace('<br />', '\n').replace(/<[^>]+>/g, '').replace(/\t/g, '').replace('&#039;', "'");
@@ -771,7 +755,6 @@ function assaults_command(e) {
             } else {
                 faction_logo = horde_logo;
             }
-
             e.message.channel.sendMessage(" ", false, {
                 color: 0x009900,
                 thumbnail: {
@@ -787,7 +770,7 @@ function assaults_command(e) {
         });
         res.on('error', function (e) {
             console.log('Problem with request: ' + e.message + " at " + new Date().toString());
-        })
+        });
     });
     requests.end();
 }
@@ -808,8 +791,9 @@ function write_file(file, obj) {
 }
 
 function read_file(file) {
+	var object;
     try {
-        var object = JSON.parse(fs.readFileSync(file, "UTF-8"));
+        object = JSON.parse(fs.readFileSync(file, "UTF-8"));
     } catch (e) {
         console.log('invalid json read' + file);
         console.log(e.message + " at " + new Date().toString());
@@ -849,18 +833,18 @@ function parse(data) {
             } else {
                 if (element.gs$cell.col == 1) {
                     i++;
-                    retArray['player'].push(element.gs$cell.$t);
+                    retArray.player.push(element.gs$cell.$t);
                     // console.log("i player : "+i+" of
                     // "+element.gs$cell.$t);
                     tmp_jour = [];
                 }
                 if (element.gs$cell.col == update_col) {
-                    retArray['upd'][i - 1] = element.gs$cell.$t;
+                    retArray.upd[i - 1] = element.gs$cell.$t;
                     // console.log("i upd : "+i+" of
                     // "+element.gs$cell.$t);
                 }
                 if (element.gs$cell.col == tag_col) {
-                    retArray['tag'][i - 1] = element.gs$cell.$t;
+                    retArray.tag[i - 1] = element.gs$cell.$t;
                     // console.log("i tag : "+i+" of
                     // "+element.gs$cell.$t);
                 }
@@ -868,13 +852,11 @@ function parse(data) {
                     // console.log("date_col :
                     // "+element.gs$cell.col);
                     tmp_jour[element.gs$cell.col - date_col] = element.gs$cell.$t;
-                    retArray['jour'][i - 1] = tmp_jour;
+                    retArray.jour[i - 1] = tmp_jour;
                 }
             }
-        })
-        retArray['player'].pop();
-        // console.log("retArray P :"+ retArray.player);
-        // console.log("retArray U :"+ retArray.upd);
+        });
+        retArray.player.pop();
         return retArray;
     } catch (e) {
         console.log('invalid json');
@@ -889,8 +871,7 @@ Array.prototype.inArray = function (comparer) {
     return false;
 };
 
-// adds an element to the array if it does not already exist using a comparer
-// function
+// adds an element to the array if it does not already exist using a comparer function
 Array.prototype.pushIfNotExist = function (element) {
     if (!this.inArray(element)) {
         this.push(element);
@@ -901,7 +882,7 @@ Array.prototype.pushIfNotExist = function (element) {
 
 function Send_debug_msg(message) {
 
-    if (debug_guild == 0) return;
+    if (debug_guild === 0) return;
 
     var guild = client.Guilds.find(g => g.id == debug_guild);
     if (!guild) return console.log("invalid guild");
@@ -915,7 +896,7 @@ Date.prototype.getWeek = function () {
     var onejan = new Date(this.getFullYear(), 0, 1);
     var today = new Date(this.getFullYear(), this.getMonth(), this.getDate());
     var dayOfYear = ((today - onejan + 1) / 86400000);
-    return Math.ceil(dayOfYear / 7)
+    return Math.ceil(dayOfYear / 7);
 };
 
 function deleteCollection(db, collectionPath, batchSize) {
@@ -933,7 +914,7 @@ function deleteQueryBatch(db, query, batchSize, resolve, reject) {
         .get()
         .then(snapshot => {
             // When there are no documents left, we are done
-            if (snapshot.size == 0) {
+            if (snapshot.size === 0) {
                 return 0;
             }
 
