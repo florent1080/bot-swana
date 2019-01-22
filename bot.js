@@ -235,8 +235,12 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
     // console.log("new msg : "+e.message.content+" from
     // "+e.message.author.username + " at " + new
     // Date().toLocaleTimeString());
-    if (e.message.author.id == client.User.id)
+    if (e.message.author.id == client.User.id) {
         return;
+    }
+    if (!e.message.content.startsWith('!')) {
+        return;
+    }
     switch (e.message.content) {
         case "!debug":
             var final_string = "";
@@ -252,12 +256,11 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                 "**!disporesto** j (commentaire): defini mes dispo du resto ex : \"!disporesto 124 osef\" pour lundi,mardi,jeudi\n" +
                 "**!assault** : affiche le prochain assaut\n" +
                 "**!invasion** : affiche la prochaine invasion de la Légion\n" +
-                "**!affixes** : affiche les affixes de donjon de clé mythique de la semaine \n" +
+                "**!affixes** : affiche les affixes de donjon de clé mythique de la semaine\n" +
                 "**!goplay** : Uniquement pour les mecs MEGA cho2plé ! \n" +
-                "**!createcommand cmd display** : créé une commande personnalisée ( pour afficher les commandes personnalisées utilisez \"!helpcommand\")\n" +
+                "**!createcommand cmd display** : crée une commande personnalisée (pour afficher les commandes personnalisées utilisez \"!helpcommand\")\n" +
                 "**!removecommand cmd** : supprime une commande personnalisée\n" +
-                "**!stream cmd** : gere les notifications de stream (!stream help pour plus d'info)");
-
+                "**!stream cmd** : gere les notifications de stream (!stream help pour plus d'info");
             break;
         case "!helpcommand":
             // console.log("!helpcommand");
@@ -271,7 +274,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
 
             break;
         case "!dev":
-            e.message.channel.sendMessage("	http://qeled.github.io/discordie/#/docs/Discordie?_k=9oyisd");
+            e.message.channel.sendMessage("http://qeled.github.io/discordie/#/docs/Discordie?_k=9oyisd");
             break;
         case "!invlink":
             e.message.channel.sendMessage("https://discordapp.com/oauth2/authorize?scope=bot&client_id=283279977464725504");
@@ -409,6 +412,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             });
             requests.end();
             break;
+        case "!assaut":
         case "!assault":
         case "!assaults":
             assaults_command(e);
@@ -686,31 +690,36 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             "msg": "",
             "author": ""
         }
-        var str =
-            command["msg"] = msg.content.replace(/^([^ ]+ ){2}/, ''); // remove
+        var str = command["msg"] = msg.content.replace(/^([^ ]+ ){2}/, ''); // remove
         // 2
         // 1st
         // words
         command["cmd"] = msg.content.split(" ")[1];
+        if (command["cmd"].startsWith('!')) {
+            msg.channel.sendMessage("Je m'occupe de rajouter le ! tkt. (Commande non créée)");
+            return;
+        }
         command["author"] = e.message.author;
         private_commande = read_file("./command.json");
-        // console.log("private 1 : ");console.log(private_commande);
-        private_commande[command["cmd"]] = command;
-        // console.log("private 2 : ");console.log(private_commande);
-        write_file("./command.json", private_commande);
-        msg.channel.sendMessage("commande " + command["cmd"] + " créée");
-
+        if (!private_commande.includes('!' + command["cmd"])) {
+            msg.channel.sendMessage("La commande !" + cmd + " existe déjà.");
+        } else {
+            private_commande['!' + command["cmd"]] = command;
+            write_file("./command.json", private_commande);
+            msg.channel.sendMessage("La commande !" + command["cmd"] + " a été créée.");
+        }
     }
     if (e.message.content.startsWith("!removecommand")) {
         var msg = e.message;
         var cmd = msg.content.split(" ")[1];
         private_commande = read_file("./command.json");
-        // console.log("private 1 : ");console.log(private_commande);
-        delete private_commande[cmd];
-        // console.log("private 2 : ");console.log(private_commande);
-        write_file("./command.json", private_commande);
-        msg.channel.sendMessage("commande " + cmd + " supprimée");
-
+        if (!private_commande.includes('!' + cmd)) {
+            msg.channel.sendMessage("La commande !" + cmd + " n'existe pas.");
+        } else {
+            delete private_commande['!' + cmd];
+            write_file("./command.json", private_commande);
+            msg.channel.sendMessage("La commande !" + cmd + " a été supprimée");
+        }
     }
     if (e.message.content.startsWith("!botname")) {
         var name = e.message.content.substr(e.message.content.indexOf(" ") + 1);
@@ -754,7 +763,7 @@ function assaults_command(e) {
             data += raw;
         })
         res.on('end', function () {
-            var zone = data.substring(data.lastIndexOf("<b>") + 3, data.lastIndexOf("</b>"));
+            var zone = data.substring(data.indexOf("<b>") + 3, data.indexOf("</b>"));
             data = data.replace('<br />', '\n').replace(/<[^>]+>/g, '').replace(/\t/g, '').replace('&#039;', "'");
             var faction_logo = "";
             if (allianceZones.includes(zone)) {
