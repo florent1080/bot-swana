@@ -701,7 +701,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
         }
         command["author"] = e.message.author;
         private_commande = read_file("./command.json");
-        if (!private_commande.includes('!' + command["cmd"])) {
+        if (private_commande['!' + command["cmd"]] !== undefined) {
             msg.channel.sendMessage("La commande !" + cmd + " existe déjà.");
         } else {
             private_commande['!' + command["cmd"]] = command;
@@ -713,7 +713,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
         var msg = e.message;
         var cmd = msg.content.split(" ")[1];
         private_commande = read_file("./command.json");
-        if (!private_commande.includes('!' + cmd)) {
+        if (private_commande['!' + cmd] === undefined) {
             msg.channel.sendMessage("La commande !" + cmd + " n'existe pas.");
         } else {
             delete private_commande['!' + cmd];
