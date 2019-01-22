@@ -52,9 +52,9 @@ var db = admin.firestore();
 var question = "";
 var answer = [];
 //prevent heroku sleeping
-setInterval(function() {
-    http.get("http://botswana.herokuapp.com");
-}, 300000); // every 5 minutes (300000)
+// setInterval(function() {
+//     http.get("http://botswana.herokuapp.com");
+// }, 300000); // every 5 minutes (300000)
 //*******************/
 setInterval(function () {
     if (clientState != client.state)
@@ -952,13 +952,3 @@ function deleteQueryBatch(db, query, batchSize, resolve, reject) {
         })
         .catch(reject);
 }
-
-// var http = require('http');
-
-// var server = http.createServer(function (req, res) {
-//     res.writeHead(200);
-//     res.end('Le bot est ' + client.state);
-// });
-
-
-// server.listen(process.env.PORT || 8080);
