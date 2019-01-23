@@ -47,6 +47,7 @@ var serviceAccount = require('./bot-swana-firebase-adminsdk-u8zhh-8fa53e0908.jso
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
+admin.firestore().settings( { timestampsInSnapshots: true })
 var db = admin.firestore();
 
 var question = "";
