@@ -48,6 +48,7 @@ admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
 var db = admin.firestore();
+var guild_db = null;
 
 var question = "";
 var answer = [];
@@ -236,8 +237,8 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
         return obj.id === e.message.channel_id;
     })[0];
     var message_guild = message_channel_obj.guild_id;
-    console.log(message_channel_obj, message_guild);
-    
+    guild_db = db.collection('server').doc(message_guild);
+
     var args = e.message.content.split(' ');
     var input_command = args[0];
     args.shift();
@@ -297,7 +298,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             break;
         case "!resetresto":
             resto_dispo = {};
-            deleteCollection(db, 'resto', 500); 
+            deleteCollection(db, 'server/'+ message_guild +'/resto', 500); 
             e.message.addReaction("\ud83d\udc4c");
             break;
         case "!cho2plé":
@@ -444,7 +445,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                 resto_mangeur.date = date;
                 resto_mangeur.comment = comment;
                 resto_mangeur.name = msg.displayUsername;
-                db.collection('resto').doc(msg.author.mention).set(resto_mangeur);
+                guild_db.collection('resto').doc(msg.author.mention).set(resto_mangeur);
                 msg.addReaction("\ud83d\udc4c");
             }
             break;
@@ -464,7 +465,7 @@ function displayrestodispo_command(e) {
     var jour = ['', '', '', '', ''];
     var mangeur_counter = [0, 0, 0, 0, 0];
     
-    db.collection('resto').get().then(snapshot => {
+    guild_db.collection('resto').get().then(snapshot => {
         snapshot.forEach((doc) => {
             var mangeur = doc.data();
             mangeur_list.push(mangeur);
