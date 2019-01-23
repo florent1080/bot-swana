@@ -79,7 +79,7 @@ var index = 0;
 setInterval(function () {
     if (!client.connected) {
         return console.log("|Discordie| not connected : " + client.state + " at " + new Date().toString());
-    }
+    } 
     var game = {
         name: "with !help"
     };
@@ -231,6 +231,12 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
     if (!e.message.content.startsWith('!')) {
         return;
     }
+    
+    var message_channel_obj = client.Channels.filter(obj => {
+        return obj.id === e.message.channel_id;
+    })[0];
+    var message_guild = message_channel_obj.guild_id;
+    console.log(message_channel_obj, message_guild);
     
     var args = e.message.content.split(' ');
     var input_command = args[0];
