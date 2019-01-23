@@ -266,12 +266,23 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                 "**!stream cmd** : gere les notifications de stream (!stream help pour plus d'info");
             break;
         case "!helpcommand":
-            private_commande = read_file("./command.json");
+            // private_commande = read_file("./command.json");
             var str = "";
-            for (var prvt_cmd in private_commande) {
-                str += private_commande[prvt_cmd].cmd + " by " + private_commande[prvt_cmd].author.username + "\n";
-            }
-            e.message.channel.sendMessage(str);
+            guild_db.collection('commands').get().then(snapshot => {
+                snapshot.forEach((doc) => {
+                    var prvt_cmd = doc.data();
+                    str += prvt_cmd.cmd + " by " + prvt_cmd.author.username + "\n";
+                })
+            }).then(() => {
+                if(str) {
+                    e.message.channel.sendMessage(str);
+                } else {
+                    e.message.channel.sendMessage("Aucune commande disponible.");
+                }
+            })
+            // for (var prvt_cmd in private_commande) {
+            //     str += private_commande[prvt_cmd].cmd + " by " + private_commande[prvt_cmd].author.username + "\n";
+            // }
             break;
         case "!dev":
             e.message.channel.sendMessage("http://qeled.github.io/discordie/#/docs/Discordie?_k=9oyisd");
@@ -404,28 +415,55 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                 msg.channel.sendMessage("Je m'occupe de rajouter le ! tkt. (Commande non créée)");
                 return;
             }
+            command.cmd = '!' + command.cmd;
             command.msg = msg.content.replace(/^([^ ]+ ){2}/, '');
-            command.author = e.message.author;
+            command.author = JSON.parse(JSON.stringify(e.message.author));
             
-            private_command = read_file("./command.json");
-            if (private_command['!' + command.cmd] !== undefined) {
-                msg.channel.sendMessage("La commande !" + command.cmd + " existe déjà.");
-            } else {
-                private_command['!' + command.cmd] = command;
-                write_file("./command.json", private_command);
-                msg.channel.sendMessage("La commande !" + command.cmd + " a été créée.");
-            }
+            var commandRef = guild_db.collection('commands').doc(command.cmd)
+
+            commandRef.get().then((snapshot) => {
+                if (snapshot.exists) {
+                    msg.channel.sendMessage("La commande " + command.cmd + " existe déjà.");
+                } else {
+                    commandRef.set(command);
+                    msg.channel.sendMessage("La commande " + command.cmd + " a été créée.");
+                }
+            });
+            // private_command = read_file("./command.json");
+            // if (private_command['!' + command.cmd] !== undefined) {
+            //     msg.channel.sendMessage("La commande !" + command.cmd + " existe déjà.");
+            // } else {
+            //     private_command['!' + command.cmd] = command;
+            //     write_file("./command.json", private_command); 
+            //     msg.channel.sendMessage("La commande !" + command.cmd + " a été créée.");
+            // }
             break;
         case "!removecommand":
             var command_to_remove = args[0];
-            private_command = read_file("./command.json");
-            if (private_command['!' + command_to_remove] === undefined) {
-                msg.channel.sendMessage("La commande !" + command_to_remove + " n'existe pas.");
-            } else {
-                delete private_command['!' + command_to_remove];
-                write_file("./command.json", private_command);
-                msg.channel.sendMessage("La commande !" + command_to_remove + " a été supprimée");
+
+            if (command_to_remove.startsWith('!')) {
+                msg.channel.sendMessage("Je m'occupe de rajouter le ! tkt. (Commande non suppr.)");
+                return;
             }
+            command_to_remove = '!' + command_to_remove;
+            var commandRef = guild_db.collection('commands').doc(command_to_remove)
+
+            commandRef.get().then((snapshot) => {
+                if (snapshot.exists) {
+                    commandRef.delete();
+                    msg.channel.sendMessage("La commande " + command_to_remove + " a été supprimée");
+                } else {
+                    msg.channel.sendMessage("La commande " + command_to_remove + " n'existe pas.");
+                }
+            });
+            // private_command = read_file("./command.json");
+            // if (private_command['!' + command_to_remove] === undefined) {
+            //     msg.channel.sendMessage("La commande !" + command_to_remove + " n'existe pas.");
+            // } else {
+            //     delete private_command['!' + command_to_remove];
+            //     write_file("./command.json", private_command);
+            //     msg.channel.sendMessage("La commande !" + command_to_remove + " a été supprimée");
+            // }
             break;
         case "!botname":
             var name = e.message.content.substr(e.message.content.indexOf(" ") + 1);
@@ -450,10 +488,13 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             }
             break;
         default:
-            private_command = read_file("./command.json");
-            if (private_command[e.message.content] !== undefined) {
-                e.message.channel.sendMessage(private_command[e.message.content].msg);
-            }
+            // private_command = read_file("./command.json");
+            var commandRef = guild_db.collection('commands').doc(e.message.content)
+            commandRef.get().then((snapshot) => {
+                if (snapshot.exists) {
+                    e.message.channel.sendMessage(snapshot.data().msg);
+                } 
+            });
             break;
     }
 });
