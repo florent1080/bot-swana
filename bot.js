@@ -9,7 +9,6 @@ const https = require('https');
 var week_day = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"];
 var week_day_calendar = ["mer", "jeu", "ven", "sam", "dim", "lun", "mar"];
 var allianceZones = ["Vallée Chantorage", "Rade de Tiragarde", "Drustvar"];
-var twitch_client_ID = "qxihlu11ef6gpohfhqb9b27d40u6lj"; // NOT USED ?
 var twitch_interval = 30000;
 var affixes_list = ["Raging, Volcanic, Tyrannical",
     "Teeming, Explosive, Fortified",
@@ -51,16 +50,16 @@ var db = admin.firestore();
 
 var question = "";
 var answer = [];
-//prevent heroku sleeping
-// setInterval(function() {
-//     http.get("http://botswana.herokuapp.com");
-// }, 300000); // every 5 minutes (300000)
-//*******************/
+
 setInterval(function () {
     if (clientState != client.state) {
         console.log(client.state + " at " + new Date().toString());
     }
     clientState = client.state;
+    var game = {
+	name: "with !help"
+    };
+    client.User.setStatus("online", game);
 }, 30000, function (error) { /* handle error */ });
 
 var twitch_template = {
@@ -73,19 +72,16 @@ var option = { // NOT USED ?
     "auto_notif": true,
     "guild": ""
 };
+var twitch;
+var stream = {};
 var index = 0;
 // ----------------------------------INTERVAL FUNCTION UPDATE
 // STREAMER-----------------------------------------
 setInterval(function () {
     if (!client.connected) {
-        return console.log("|Discordie| not connected : " + client.state + " at " + new Date().toString());
+        //return console.log("|Discordie| not connected : " + client.state + " at " + new Date().toString());
     }
-    var game = {
-        name: "with !help"
-    };
-    client.User.setStatus("online", game);
-    var last_name = ""; // NOT USED ?
-    var twitch = read_file("./twitch.json");
+    twitch = read_file("./twitch.json");
     refreshed_counter = 0;
 
     if (twitch.list === undefined) {
@@ -95,7 +91,6 @@ setInterval(function () {
     if (index >= twitch.list.length) {
         index = 0;
     }
-    last_name = name;
     var data;
     var data_raw = "";
     var twitch_option = {
@@ -127,8 +122,8 @@ setInterval(function () {
             }
             name = data._links.self.split('/');
             name = name[name.length - 1];
-            if (twitch.stream.name !== undefined) {
-                if (twitch.stream.name.refreshed === true) {
+            if (stream[name] !== undefined) {
+                if (stream[name].refreshed === true) {
                     streamer.refreshed = true;
                 } else {
                     streamer.refreshed = false;
@@ -136,9 +131,10 @@ setInterval(function () {
             } else {
                 streamer.refreshed = false;
             }
-            twitch.stream.name = streamer;
+            stream[name] = streamer;
             if (data.stream !== null) {
-                if (twitch.stream.name.refreshed === false) {
+                if (stream[name].refreshed === false) {
+                    stream[name].refreshed = true;
                     channel = twitch.option.channel;
                     var guild = client.Guilds.find(g => g.id == twitch.option.guild);
                     if (!guild) {
@@ -181,13 +177,10 @@ setInterval(function () {
                             text: "stream online"
                         }
                     });
-                    console.log("msg send");
-                    twitch.stream.name.refreshed = true;
                 }
             } else {
-                twitch.stream.name.refreshed = false;
+                stream[name].refreshed = false;
             }
-            write_file("./twitch.json", twitch);
         });
     });
     req.on('error', (e) => {
@@ -462,7 +455,9 @@ function displayrestodispo_command(e) {
         snapshot.forEach((doc) => {
             var mangeur = doc.data();
             mangeur_list.push(mangeur);
-            arr = mangeur.date.split("").filter(function (item, index, inputArray) { // remove duplicate day
+            arr = mangeur.date.split("").filter(function (item, index, inputArray) { // remove
+											// duplicate
+											// day
                 return inputArray.indexOf(item) == index;
             });
             arr.forEach(function (j, index) { // sort day
@@ -476,7 +471,8 @@ function displayrestodispo_command(e) {
             }
         });
     }).then(() => {
-        if (mangeur_list === undefined || mangeur_list.length === 0) { // return planning
+        if (mangeur_list === undefined || mangeur_list.length === 0) { // return
+									// planning
             e.message.channel.sendMessage("Personne encore inscrit.\n!disporesto \"jjj\" \"resto\" pour vous inscrire");
         } else {
             jour.forEach(function (elem, index) {
@@ -522,7 +518,7 @@ function invasion_command(e) {
 }
 
 function affixes_command(e) {
-    var opts_eu = { // NOT USED ?
+    var opts_eu = { // NOT USED ? // A UTILISER SI BUG/DIFFERENTE AFFIXES NA/EU
         host: 'raider.io',
         path: "/api/v1/mythic-plus/affixes?region=eu"
     };
@@ -625,7 +621,7 @@ function stream_command(e, args) {
                 if (index > -1) {
                     twitch.list.splice(index, 1);
                     msg.channel.sendMessage(name + " a été supprimé de la liste");
-                    twitch.stream[name] = "";
+                    stream[name] = "";
                 } else {
                     msg.channel.sendMessage("le channel n'est pas dans la liste");
                 }
@@ -871,7 +867,8 @@ Array.prototype.inArray = function (comparer) {
     return false;
 };
 
-// adds an element to the array if it does not already exist using a comparer function
+// adds an element to the array if it does not already exist using a comparer
+// function
 Array.prototype.pushIfNotExist = function (element) {
     if (!this.inArray(element)) {
         this.push(element);
