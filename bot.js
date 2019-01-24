@@ -48,7 +48,9 @@ var serviceAccount = require('./bot-swana-firebase-adminsdk-u8zhh-8fa53e0908.jso
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
+admin.firestore().settings( { timestampsInSnapshots: true })
 var db = admin.firestore();
+var guild_db = null;
 
 var question = "";
 var answer = [];
@@ -114,6 +116,12 @@ client.Dispatcher.on("MESSAGE_CREATE", function (e) {
         return;
     }
     
+    var message_channel_obj = client.Channels.filter(obj => {
+        return obj.id === e.message.channel_id;
+    })[0];
+    var message_guild = message_channel_obj.guild_id;
+    guild_db = db.collection('server').doc(message_guild);
+
     var args = e.message.content.split(' ');
     var input_command = args[0];
     args.shift();
@@ -141,12 +149,19 @@ client.Dispatcher.on("MESSAGE_CREATE", function (e) {
                 "**!stream cmd** : gere les notifications de stream (!stream help pour plus d'info");
             break;
         case "!helpcommand":
-            private_commande = util.read_file("./command.json");
             var str = "";
-            for (var prvt_cmd in private_commande) {
-                str += private_commande[prvt_cmd].cmd + " by " + private_commande[prvt_cmd].author.username + "\n";
-            }
-            e.message.channel.sendMessage(str);
+            guild_db.collection('commands').get().then(snapshot => {
+                snapshot.forEach((doc) => {
+                    var prvt_cmd = doc.data();
+                    str += prvt_cmd.cmd + " by " + prvt_cmd.author.username + "\n";
+                })
+            }).then(() => {
+                if(str) {
+                    e.message.channel.sendMessage(str);
+                } else {
+                    e.message.channel.sendMessage("Aucune commande disponible.");
+                }
+            })
             break;
         case "!dev":
             e.message.channel.sendMessage("http://qeled.github.io/discordie/#/docs/Discordie?_k=9oyisd");
@@ -173,7 +188,7 @@ client.Dispatcher.on("MESSAGE_CREATE", function (e) {
             break;
         case "!resetresto":
             resto_dispo = {};
-            deleteCollection(db, 'resto', 500); 
+            deleteCollection(db, 'server/'+ message_guild +'/resto', 500); 
             e.message.addReaction("\ud83d\udc4c");
             break;
         case "!cho2plé":
@@ -279,28 +294,38 @@ client.Dispatcher.on("MESSAGE_CREATE", function (e) {
                 msg.channel.sendMessage("Je m'occupe de rajouter le ! tkt. (Commande non créée)");
                 return;
             }
+            command.cmd = '!' + command.cmd;
             command.msg = msg.content.replace(/^([^ ]+ ){2}/, '');
-            command.author = e.message.author;
-            
-            private_command = util.read_file("./command.json");
-            if (private_command['!' + command.cmd] !== undefined) {
-                msg.channel.sendMessage("La commande !" + command.cmd + " existe déjà.");
-            } else {
-                private_command['!' + command.cmd] = command;
-                util.write_file("./command.json", private_command);
-                msg.channel.sendMessage("La commande !" + command.cmd + " a été créée.");
-            }
+            command.author = JSON.parse(JSON.stringify(e.message.author));
+            var commandRef = guild_db.collection('commands').doc(command.cmd)
+
+            commandRef.get().then((snapshot) => {
+                if (snapshot.exists) {
+                    msg.channel.sendMessage("La commande " + command.cmd + " existe déjà.");
+                } else {
+                    commandRef.set(command);
+                    msg.channel.sendMessage("La commande " + command.cmd + " a été créée.");
+                }
+            });
             break;
         case "!removecommand":
             var command_to_remove = args[0];
-            private_command = util.read_file("./command.json");
-            if (private_command['!' + command_to_remove] === undefined) {
-                msg.channel.sendMessage("La commande !" + command_to_remove + " n'existe pas.");
-            } else {
-                delete private_command['!' + command_to_remove];
-                util.write_file("./command.json", private_command);
-                msg.channel.sendMessage("La commande !" + command_to_remove + " a été supprimée");
+
+            if (command_to_remove.startsWith('!')) {
+                msg.channel.sendMessage("Je m'occupe de rajouter le ! tkt. (Commande non suppr.)");
+                return;
             }
+            command_to_remove = '!' + command_to_remove;
+            var commandRef = guild_db.collection('commands').doc(command_to_remove)
+
+            commandRef.get().then((snapshot) => {
+                if (snapshot.exists) {
+                    commandRef.delete();
+                    msg.channel.sendMessage("La commande " + command_to_remove + " a été supprimée");
+                } else {
+                    msg.channel.sendMessage("La commande " + command_to_remove + " n'existe pas.");
+                }
+            });
             break;
         case "!botname":
             var name = e.message.content.substr(e.message.content.indexOf(" ") + 1);
@@ -320,15 +345,17 @@ client.Dispatcher.on("MESSAGE_CREATE", function (e) {
                 resto_mangeur.date = date;
                 resto_mangeur.comment = comment;
                 resto_mangeur.name = msg.displayUsername;
-                db.collection('resto').doc(msg.author.mention).set(resto_mangeur);
+                guild_db.collection('resto').doc(msg.author.mention).set(resto_mangeur);
                 msg.addReaction("\ud83d\udc4c");
             }
             break;
         default:
-            private_command = util.read_file("./command.json");
-            if (private_command[e.message.content] !== undefined) {
-                e.message.channel.sendMessage(private_command[e.message.content].msg);
-            }
+            var commandRef = guild_db.collection('commands').doc(e.message.content)
+            commandRef.get().then((snapshot) => {
+                if (snapshot.exists) {
+                    e.message.channel.sendMessage(snapshot.data().msg);
+                } 
+            });
             break;
     }
 });
@@ -340,7 +367,7 @@ function displayrestodispo_command(e) {
     var jour = ['', '', '', '', ''];
     var mangeur_counter = [0, 0, 0, 0, 0];
     
-    db.collection('resto').get().then(snapshot => {
+    guild_db.collection('resto').get().then(snapshot => {
         snapshot.forEach((doc) => {
             var mangeur = doc.data();
             mangeur_list.push(mangeur);
