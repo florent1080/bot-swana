@@ -89,7 +89,7 @@ client.connect({
  * "application/vnd.twitchtv.v5+json", scopes: scope });
  */
 
-client.Dispatcher.on("GATEWAY_READY", e => {
+client.Dispatcher.on("GATEWAY_READY", function (e) {
     console.log("Connected as: " + client.User.username + " at " + new Date().toString());
     if (client.autoReconnect.enabled) {
         console.log("autoreconnect already enabled");
@@ -99,14 +99,14 @@ client.Dispatcher.on("GATEWAY_READY", e => {
     }
 });
 
-client.Dispatcher.on("DISCONNECTED", e => {
+client.Dispatcher.on("DISCONNECTED", function (e) {
     console.log("DISCONNECTED at " + new Date().toString());
     console.log("error : " + e.error);
     console.log("autoReconnect : " + e.autoReconnect);
     console.log("auto reconnect delay : " + e.delay);
 });
 
-client.Dispatcher.on("MESSAGE_CREATE", e => {
+client.Dispatcher.on("MESSAGE_CREATE", function (e) {
     if (e.message.author.id == client.User.id) {
         return;
     }
@@ -551,7 +551,7 @@ function calendar_command(e, args) {
             data += chunk;
         });
         res.on('end', function () {
-            var ret = parse(data);
+            var ret = util.parse(data);
             if (ret === undefined) {
                 return;
             }
@@ -660,66 +660,6 @@ function assaults_command(e) {
     requests.end();
 }
 
-function parse(data) {
-    try {
-        var update_col = 11,
-            tag_col = 13,
-            date_col = 4;
-        var i = 0;
-        var retArray = {
-            'player': [],
-            'upd': [],
-            'tag': [],
-            'jour': []
-        };
-        var tmp_jour = [];
-        data = data.replace("// API callback\ndoData(", '');
-        var subdata = data.substring(-1, data.lastIndexOf(');'));
-        subdata = JSON.parse(subdata);
-        subdata.feed.entry.forEach(function (element, index) {
-            if (element.gs$cell.row == 1) {
-                if (element.gs$cell.$t == "Updaté") {
-                    update_col = element.gs$cell.col;
-                }
-                if (element.gs$cell.$t == "TAG Discord") {
-                    tag_col = element.gs$cell.col;
-                }
-                if (element.gs$cell.$t == "mer") {
-                    date_col = element.gs$cell.col;
-                }
-            } else {
-                if (element.gs$cell.col == 1) {
-                    i++;
-                    retArray.player.push(element.gs$cell.$t);
-                    // console.log("i player : "+i+" of
-                    // "+element.gs$cell.$t);
-                    tmp_jour = [];
-                }
-                if (element.gs$cell.col == update_col) {
-                    retArray.upd[i - 1] = element.gs$cell.$t;
-                    // console.log("i upd : "+i+" of
-                    // "+element.gs$cell.$t);
-                }
-                if (element.gs$cell.col == tag_col) {
-                    retArray.tag[i - 1] = element.gs$cell.$t;
-                    // console.log("i tag : "+i+" of
-                    // "+element.gs$cell.$t);
-                }
-                if ((element.gs$cell.col >= date_col) && (element.gs$cell.col < (date_col + 7))) {
-                    // console.log("date_col :
-                    // "+element.gs$cell.col);
-                    tmp_jour[element.gs$cell.col - date_col] = element.gs$cell.$t;
-                    retArray.jour[i - 1] = tmp_jour;
-                }
-            }
-        });
-        retArray.player.pop();
-        return retArray;
-    } catch (e) {
-        console.log('invalid json');
-        console.log(e);
-    }
-}
 
 Array.prototype.inArray = function (comparer) {
     for (var i = 0; i < this.length; i++) {
@@ -762,7 +702,7 @@ function deleteCollection(db, collectionPath, batchSize) {
     var collectionRef = db.collection(collectionPath);
     var query = collectionRef.orderBy('__name__').limit(batchSize);
 
-    return new Promise((resolve, reject) => {
+    return new Promise(function(resolve, reject) {
         deleteQueryBatch(db, query, batchSize, resolve, reject);
     });
 }
