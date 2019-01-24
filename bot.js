@@ -1,6 +1,8 @@
 /*jshint esversion: 6 */
-var Discordie = require("discordie");
+const Discordie = require("discordie");
 const fs = require('fs');
+const util = require('./file_utils.js');
+const twitch = require('./twitch.js');
 var client = new Discordie();
 var url = '/feeds/cells/1qwoWEsV5VGpK9O8GFMMVEDSsCdw5zBedApCHD1igOUM/1/public/values?alt=json-in-script&callback=doData';
 var raidzbub_url = '/feeds/cells/1am4oo8wq7Ho_cJ4KoQpa1hotCbsjwYCwMylAGovy-Bs/1/public/values?alt=json-in-script&callback=doData';
@@ -9,7 +11,6 @@ const https = require('https');
 var week_day = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"];
 var week_day_calendar = ["mer", "jeu", "ven", "sam", "dim", "lun", "mar"];
 var allianceZones = ["Vallée Chantorage", "Rade de Tiragarde", "Drustvar"];
-var twitch_client_ID = "qxihlu11ef6gpohfhqb9b27d40u6lj"; // NOT USED ?
 var twitch_interval = 30000;
 var affixes_list = ["Raging, Volcanic, Tyrannical",
     "Teeming, Explosive, Fortified",
@@ -53,23 +54,18 @@ var guild_db = null;
 
 var question = "";
 var answer = [];
-//prevent heroku sleeping
-// setInterval(function() {
-//     http.get("http://botswana.herokuapp.com");
-// }, 300000); // every 5 minutes (300000)
-//*******************/
+
 setInterval(function () {
     if (clientState != client.state) {
         console.log(client.state + " at " + new Date().toString());
     }
     clientState = client.state;
+    var game = {
+	name: "with !help"
+    };
+    client.User.setStatus("online", game);
 }, 30000, function (error) { /* handle error */ });
 
-var twitch_template = {
-    "stream": {},
-    "option": {},
-    "list": []
-};
 var option = { // NOT USED ?
     "interval": twitch_interval,
     "auto_notif": true,
@@ -80,123 +76,9 @@ var index = 0;
 // STREAMER-----------------------------------------
 setInterval(function () {
     if (!client.connected) {
-        return console.log("|Discordie| not connected : " + client.state + " at " + new Date().toString());
-    } 
-    var game = {
-        name: "with !help"
-    };
-    client.User.setStatus("online", game);
-    var last_name = ""; // NOT USED ?
-    var twitch = read_file("./twitch.json");
-    refreshed_counter = 0;
-
-    if (twitch.list === undefined) {
-        twitch = twitch_template;
+         return console.log("|Discordie| not connected : " + client.state + "at " + new Date().toString());
     }
-    var name = twitch.list[index++];
-    if (index >= twitch.list.length) {
-        index = 0;
-    }
-    last_name = name;
-    var data;
-    var data_raw = "";
-    var twitch_option = {
-        host: "api.twitch.tv",
-        path: "/kraken/streams/" + name + "?client_id=qxihlu11ef6gpohfhqb9b27d40u6lj",
-        method: 'GET'
-    };
-    var req = https.request(twitch_option, function (res) {
-        if (res.statusCode !== 200) {
-            return console.log("invalide status " + res.statusCode + " at " + new Date().toString());
-        }
-        res.setEncoding('utf8');
-        res.on('data', function (raw) {
-            data_raw += raw;
-        });
-
-        res.on('end', function () {
-            var streamer = {
-                "response": "",
-                "update_time": "",
-                "refreshed": ""
-            };
-            streamer.response = data_raw;
-            streamer.update_time = new Date().toString();
-            data = JSON.parse(data_raw);
-            if (data._links === undefined) {
-                console.log("invalid data");
-                return console.log(data);
-            }
-            name = data._links.self.split('/');
-            name = name[name.length - 1];
-            if (twitch.stream.name !== undefined) {
-                if (twitch.stream.name.refreshed === true) {
-                    streamer.refreshed = true;
-                } else {
-                    streamer.refreshed = false;
-                }
-            } else {
-                streamer.refreshed = false;
-            }
-            twitch.stream.name = streamer;
-            if (data.stream !== null) {
-                if (twitch.stream.name.refreshed === false) {
-                    channel = twitch.option.channel;
-                    var guild = client.Guilds.find(g => g.id == twitch.option.guild);
-                    if (!guild) {
-                        return console.log("invalid guild");
-                    }
-                    var channels = guild.textChannels.find(C => C.id == channel);
-                    if (!channels) {
-                        return console.log("invalid channel");
-                    }
-                    console.log(new Date().toString());
-                    console.log(data);
-                    if (data.stream.channel.game === "") {
-                        data.stream.channel.game = "...";
-                    }
-                    if (data.stream.channel.status === "") {
-                        data.stream.channel.status = "...";
-                    }
-                    channels.sendMessage(" ", false, {
-                        color: 0x009900,
-                        author: {
-                            name: name + " is now streaming !",
-                            icon_url: "https://images-ext-1.discordapp.net/external/IZEY6CIxPwbBTk-S6KG6WSMxyY5bUEM-annntXfyqbw/https/cdn.discordapp.com/emojis/287637883022737418.png"
-                        },
-                        title: data.stream.channel.url,
-                        url: data.stream.channel.url,
-                        timestamp: data.stream.created_at,
-                        thumbnail: {
-                            url: data.stream.channel.logo,
-                            height: 80,
-                            width: 80
-                        },
-                        fields: [{
-                            name: "Playing",
-                            value: data.stream.channel.game
-                        }, {
-                            name: "Title",
-                            value: data.stream.channel.status
-                        }],
-                        footer: {
-                            text: "stream online"
-                        }
-                    });
-                    console.log("msg send");
-                    twitch.stream.name.refreshed = true;
-                }
-            } else {
-                twitch.stream.name.refreshed = false;
-            }
-            write_file("./twitch.json", twitch);
-        });
-    });
-    req.on('error', (e) => {
-        console.log('problem with request: ' + e.message + " at " + new Date().toString());
-    });
-    req.end();
-    // })
+    twitch.refresh(client);
 }, twitch_interval);
 
 client.connect({
@@ -209,7 +91,7 @@ client.connect({
  * "application/vnd.twitchtv.v5+json", scopes: scope });
  */
 
-client.Dispatcher.on("GATEWAY_READY", e => {
+client.Dispatcher.on("GATEWAY_READY", function (e) {
     console.log("Connected as: " + client.User.username + " at " + new Date().toString());
     if (client.autoReconnect.enabled) {
         console.log("autoreconnect already enabled");
@@ -219,14 +101,14 @@ client.Dispatcher.on("GATEWAY_READY", e => {
     }
 });
 
-client.Dispatcher.on("DISCONNECTED", e => {
+client.Dispatcher.on("DISCONNECTED", function (e) {
     console.log("DISCONNECTED at " + new Date().toString());
     console.log("error : " + e.error);
     console.log("autoReconnect : " + e.autoReconnect);
     console.log("auto reconnect delay : " + e.delay);
 });
 
-client.Dispatcher.on("MESSAGE_CREATE", e => {
+client.Dispatcher.on("MESSAGE_CREATE", function (e) {
     if (e.message.author.id == client.User.id) {
         return;
     }
@@ -386,7 +268,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             }
             break;
         case "!stream":
-            stream_command(e, args);
+            twitch.stream_command(e, args);
             break;
         case "!dbgMsg":
             if (args[0] == "0") {
@@ -415,7 +297,6 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             command.cmd = '!' + command.cmd;
             command.msg = msg.content.replace(/^([^ ]+ ){2}/, '');
             command.author = JSON.parse(JSON.stringify(e.message.author));
-            
             var commandRef = guild_db.collection('commands').doc(command.cmd)
 
             commandRef.get().then((snapshot) => {
@@ -490,7 +371,9 @@ function displayrestodispo_command(e) {
         snapshot.forEach((doc) => {
             var mangeur = doc.data();
             mangeur_list.push(mangeur);
-            arr = mangeur.date.split("").filter(function (item, index, inputArray) { // remove duplicate day
+            arr = mangeur.date.split("").filter(function (item, index, inputArray) { // remove
+											// duplicate
+											// day
                 return inputArray.indexOf(item) == index;
             });
             arr.forEach(function (j, index) { // sort day
@@ -504,7 +387,8 @@ function displayrestodispo_command(e) {
             }
         });
     }).then(() => {
-        if (mangeur_list === undefined || mangeur_list.length === 0) { // return planning
+        if (mangeur_list === undefined || mangeur_list.length === 0) { // return
+									// planning
             e.message.channel.sendMessage("Personne encore inscrit.\n!disporesto \"jjj\" \"resto\" pour vous inscrire");
         } else {
             jour.forEach(function (elem, index) {
@@ -550,7 +434,7 @@ function invasion_command(e) {
 }
 
 function affixes_command(e) {
-    var opts_eu = { // NOT USED ?
+    var opts_eu = { // NOT USED ? // A UTILISER SI BUG/DIFFERENTE AFFIXES NA/EU
         host: 'raider.io',
         path: "/api/v1/mythic-plus/affixes?region=eu"
     };
@@ -603,87 +487,7 @@ function affixes_command(e) {
     requests.end();    
 }
 
-function stream_command(e, args) {
-    var msg = e.message;
-    var cmd = args[0];
-    var twitch = read_file("./twitch.json");
-    if (twitch.list === undefined) {
-        twitch = twitch_template;
-    }
-    switch (cmd) {
-        case "help":
-            e.message.channel.sendMessage("**!stream add channel** : ajoute le channel twitch à la liste de notification\n" +
-                "**!stream channel #channel** : change le channel discord de notification\n" +
-                "**!stream remove channel** : supprime un channel twitch de la liste de notification\n" +
-                "**!stream list** : liste les channel enregistré");
-            break;
-        case "add":
-            var streamer = msg.content.replace(/^([^ ]+ ){2}/, '').split(" ")[0];
-            var twitch_option = {
-                host: "api.twitch.tv",
-                path: "/kraken/channels/" + streamer + "?client_id=qxihlu11ef6gpohfhqb9b27d40u6lj",
-                method: "GET"
-            };
-            var req = https.request(twitch_option, function (res) {
-                res.setEncoding('utf8');
-                res.on('data', function (raw) {
-                    raw = JSON.parse(raw);
-                    if (raw.error == "Not Found") {
-                        e.message.channel.sendMessage(raw.message);
-                    } else {
-                        if (twitch.list.pushIfNotExist(streamer)) {
-                            write_file("./twitch.json", twitch);
-                            e.message.channel.sendMessage(raw.display_name + ' add to your list');
-                        } else {
-                            e.message.channel.sendMessage(streamer + " is already in your list");
-                        }
-                    }
-                });
-                req.on("error", function (e) {
-                    console.log('!addStreamer problem');
-                    console.log('problem with request: ' + e.message);
-                });
-            });
-            req.end();
-            break;
-        case "remove":
-            if (twitch.list !== undefined) {
-                var name = msg.content.replace(/^([^ ]+ ){2}/, '').split(" ")[0];
-                var index = twitch.list.indexOf(name);
-                if (index > -1) {
-                    twitch.list.splice(index, 1);
-                    msg.channel.sendMessage(name + " a été supprimé de la liste");
-                    twitch.stream[name] = "";
-                } else {
-                    msg.channel.sendMessage("le channel n'est pas dans la liste");
-                }
-                write_file("./twitch.json", twitch);
-            }
-            break;
-        case "list":
-            var final_string = "les streams notifiés sont :\n";
-            if (twitch.list !== undefined) {
-                twitch.list.forEach(function (elem) {
-                    final_string += "> " + elem + "\n";
-                });
-            }
-            msg.channel.sendMessage(final_string);
-            break;
-        case "notify":
-            break;
-        case "channel":
-            var channel = msg.content.replace(/^([^ ]+ ){2}/, '').split(" ")[0];
-            msg.channel.sendMessage(">les notifications sont activées sur les channels :\n" + channel);
-            channel = channel.replace(/[^\/\d]/g, '');
-            twitch.option.guild = msg.guild.id;
-            twitch.option.channel = channel;
-            write_file("./twitch.json", twitch);
-            break;
-        default:
-            msg.channel.sendMessage("commande non comprise \n**!stream help** pour la liste des commandes de stream disponibles");
-            break;
-    }
-}
+
 
 function calendar_command(e, args) {
     var msg = e.message;
@@ -694,7 +498,7 @@ function calendar_command(e, args) {
             data += chunk;
         });
         res.on('end', function () {
-            var ret = parse(data);
+            var ret = util.parse(data);
             if (ret === undefined) {
                 return;
             }
@@ -803,94 +607,6 @@ function assaults_command(e) {
     requests.end();
 }
 
-function write_file(file, obj) {
-    try {
-        var json = JSON.stringify(obj);
-        fs.writeFileSync(file, json);
-    } catch (e) {
-        console.log('invalid json write' + file);
-        console.log(e.message);
-    }
-    /*
-     * require("fs").writeFile(file,JSON.stringify(obj, null, 2),'utf8',function
-     * (err) { if (err) { console.error('error write in file '+file); } } );
-     */
-    // console.log("save in file : "+JSON.stringify(obj, null, 2));
-}
-
-function read_file(file) {
-	var object;
-    try {
-        object = JSON.parse(fs.readFileSync(file, "UTF-8"));
-    } catch (e) {
-        console.log('invalid json read' + file);
-        console.log(e.message + " at " + new Date().toString());
-        object = {};
-        Send_debug_msg('invalid json read' + file + '\n' + e.message + " at " + new Date().toString());
-    }
-    return object;
-}
-
-function parse(data) {
-    try {
-        var update_col = 11,
-            tag_col = 13,
-            date_col = 4;
-        var i = 0;
-        var retArray = {
-            'player': [],
-            'upd': [],
-            'tag': [],
-            'jour': []
-        };
-        var tmp_jour = [];
-        data = data.replace("// API callback\ndoData(", '');
-        var subdata = data.substring(-1, data.lastIndexOf(');'));
-        subdata = JSON.parse(subdata);
-        subdata.feed.entry.forEach(function (element, index) {
-            if (element.gs$cell.row == 1) {
-                if (element.gs$cell.$t == "Updaté") {
-                    update_col = element.gs$cell.col;
-                }
-                if (element.gs$cell.$t == "TAG Discord") {
-                    tag_col = element.gs$cell.col;
-                }
-                if (element.gs$cell.$t == "mer") {
-                    date_col = element.gs$cell.col;
-                }
-            } else {
-                if (element.gs$cell.col == 1) {
-                    i++;
-                    retArray.player.push(element.gs$cell.$t);
-                    // console.log("i player : "+i+" of
-                    // "+element.gs$cell.$t);
-                    tmp_jour = [];
-                }
-                if (element.gs$cell.col == update_col) {
-                    retArray.upd[i - 1] = element.gs$cell.$t;
-                    // console.log("i upd : "+i+" of
-                    // "+element.gs$cell.$t);
-                }
-                if (element.gs$cell.col == tag_col) {
-                    retArray.tag[i - 1] = element.gs$cell.$t;
-                    // console.log("i tag : "+i+" of
-                    // "+element.gs$cell.$t);
-                }
-                if ((element.gs$cell.col >= date_col) && (element.gs$cell.col < (date_col + 7))) {
-                    // console.log("date_col :
-                    // "+element.gs$cell.col);
-                    tmp_jour[element.gs$cell.col - date_col] = element.gs$cell.$t;
-                    retArray.jour[i - 1] = tmp_jour;
-                }
-            }
-        });
-        retArray.player.pop();
-        return retArray;
-    } catch (e) {
-        console.log('invalid json');
-        console.log(e);
-    }
-}
 
 Array.prototype.inArray = function (comparer) {
     for (var i = 0; i < this.length; i++) {
@@ -899,7 +615,8 @@ Array.prototype.inArray = function (comparer) {
     return false;
 };
 
-// adds an element to the array if it does not already exist using a comparer function
+// adds an element to the array if it does not already exist using a comparer
+// function
 Array.prototype.pushIfNotExist = function (element) {
     if (!this.inArray(element)) {
         this.push(element);
@@ -920,6 +637,7 @@ function Send_debug_msg(message) {
     channels.sendMessage(message);
     channels.sendMessage("!dbgMsg 0 pour enlever le mode débug");
 }
+
 Date.prototype.getWeek = function () {
     var onejan = new Date(this.getFullYear(), 0, 1);
     var today = new Date(this.getFullYear(), this.getMonth(), this.getDate());
@@ -931,7 +649,7 @@ function deleteCollection(db, collectionPath, batchSize) {
     var collectionRef = db.collection(collectionPath);
     var query = collectionRef.orderBy('__name__').limit(batchSize);
 
-    return new Promise((resolve, reject) => {
+    return new Promise(function(resolve, reject) {
         deleteQueryBatch(db, query, batchSize, resolve, reject);
     });
 }
