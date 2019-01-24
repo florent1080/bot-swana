@@ -266,7 +266,6 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                 "**!stream cmd** : gere les notifications de stream (!stream help pour plus d'info");
             break;
         case "!helpcommand":
-            // private_commande = read_file("./command.json");
             var str = "";
             guild_db.collection('commands').get().then(snapshot => {
                 snapshot.forEach((doc) => {
@@ -280,9 +279,6 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                     e.message.channel.sendMessage("Aucune commande disponible.");
                 }
             })
-            // for (var prvt_cmd in private_commande) {
-            //     str += private_commande[prvt_cmd].cmd + " by " + private_commande[prvt_cmd].author.username + "\n";
-            // }
             break;
         case "!dev":
             e.message.channel.sendMessage("http://qeled.github.io/discordie/#/docs/Discordie?_k=9oyisd");
@@ -429,14 +425,6 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                     msg.channel.sendMessage("La commande " + command.cmd + " a été créée.");
                 }
             });
-            // private_command = read_file("./command.json");
-            // if (private_command['!' + command.cmd] !== undefined) {
-            //     msg.channel.sendMessage("La commande !" + command.cmd + " existe déjà.");
-            // } else {
-            //     private_command['!' + command.cmd] = command;
-            //     write_file("./command.json", private_command); 
-            //     msg.channel.sendMessage("La commande !" + command.cmd + " a été créée.");
-            // }
             break;
         case "!removecommand":
             var command_to_remove = args[0];
@@ -456,14 +444,6 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
                     msg.channel.sendMessage("La commande " + command_to_remove + " n'existe pas.");
                 }
             });
-            // private_command = read_file("./command.json");
-            // if (private_command['!' + command_to_remove] === undefined) {
-            //     msg.channel.sendMessage("La commande !" + command_to_remove + " n'existe pas.");
-            // } else {
-            //     delete private_command['!' + command_to_remove];
-            //     write_file("./command.json", private_command);
-            //     msg.channel.sendMessage("La commande !" + command_to_remove + " a été supprimée");
-            // }
             break;
         case "!botname":
             var name = e.message.content.substr(e.message.content.indexOf(" ") + 1);
@@ -488,7 +468,6 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
             }
             break;
         default:
-            // private_command = read_file("./command.json");
             var commandRef = guild_db.collection('commands').doc(e.message.content)
             commandRef.get().then((snapshot) => {
                 if (snapshot.exists) {
