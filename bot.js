@@ -253,7 +253,7 @@ client.Dispatcher.on("MESSAGE_CREATE", function (e) {
             }
             break;
         case "!stream":
-            stream_command(e, args);
+            twitch.stream_command(e, args);
             break;
         case "!dbgMsg":
             if (args[0] == "0") {
@@ -460,87 +460,7 @@ function affixes_command(e) {
     requests.end();    
 }
 
-function stream_command(e, args) {
-    var msg = e.message;
-    var cmd = args[0];
-    var twitch = util.read_file("./twitch.json");
-    if (twitch.list === undefined) {
-        twitch = twitch_template;
-    }
-    switch (cmd) {
-        case "help":
-            e.message.channel.sendMessage("**!stream add channel** : ajoute le channel twitch à la liste de notification\n" +
-                "**!stream channel #channel** : change le channel discord de notification\n" +
-                "**!stream remove channel** : supprime un channel twitch de la liste de notification\n" +
-                "**!stream list** : liste les channel enregistré");
-            break;
-        case "add":
-            var streamer = msg.content.replace(/^([^ ]+ ){2}/, '').split(" ")[0];
-            var twitch_option = {
-                host: "api.twitch.tv",
-                path: "/kraken/channels/" + streamer + "?client_id=qxihlu11ef6gpohfhqb9b27d40u6lj",
-                method: "GET"
-            };
-            var req = https.request(twitch_option, function (res) {
-                res.setEncoding('utf8');
-                res.on('data', function (raw) {
-                    raw = JSON.parse(raw);
-                    if (raw.error == "Not Found") {
-                        e.message.channel.sendMessage(raw.message);
-                    } else {
-                        if (twitch.list.pushIfNotExist(streamer)) {
-                            util.write_file("./twitch.json", twitch);
-                            e.message.channel.sendMessage(raw.display_name + ' add to your list');
-                        } else {
-                            e.message.channel.sendMessage(streamer + " is already in your list");
-                        }
-                    }
-                });
-                req.on("error", function (e) {
-                    console.log('!addStreamer problem');
-                    console.log('problem with request: ' + e.message);
-                });
-            });
-            req.end();
-            break;
-        case "remove":
-            if (twitch.list !== undefined) {
-                var name = msg.content.replace(/^([^ ]+ ){2}/, '').split(" ")[0];
-                var index = twitch.list.indexOf(name);
-                if (index > -1) {
-                    twitch.list.splice(index, 1);
-                    msg.channel.sendMessage(name + " a été supprimé de la liste");
-                    stream[name] = "";
-                } else {
-                    msg.channel.sendMessage("le channel n'est pas dans la liste");
-                }
-                util.write_file("./twitch.json", twitch);
-            }
-            break;
-        case "list":
-            var final_string = "les streams notifiés sont :\n";
-            if (twitch.list !== undefined) {
-                twitch.list.forEach(function (elem) {
-                    final_string += "> " + elem + "\n";
-                });
-            }
-            msg.channel.sendMessage(final_string);
-            break;
-        case "notify":
-            break;
-        case "channel":
-            var channel = msg.content.replace(/^([^ ]+ ){2}/, '').split(" ")[0];
-            msg.channel.sendMessage(">les notifications sont activées sur les channels :\n" + channel);
-            channel = channel.replace(/[^\/\d]/g, '');
-            twitch.option.guild = msg.guild.id;
-            twitch.option.channel = channel;
-            util.write_file("./twitch.json", twitch);
-            break;
-        default:
-            msg.channel.sendMessage("commande non comprise \n**!stream help** pour la liste des commandes de stream disponibles");
-            break;
-    }
-}
+
 
 function calendar_command(e, args) {
     var msg = e.message;
