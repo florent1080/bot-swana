@@ -1,9 +1,9 @@
 /*jshint esversion: 6 */
-const Discordie = require("discordie");
+const Discord = require('discord.js');
+const client = new Discord.Client();
 const fs = require('fs');
 const util = require('./file_utils.js');
 const twitch = require('./twitch.js');
-var client = new Discordie();
 var url = '/feeds/cells/1qwoWEsV5VGpK9O8GFMMVEDSsCdw5zBedApCHD1igOUM/1/public/values?alt=json-in-script&callback=doData';
 var raidzbub_url = '/feeds/cells/1am4oo8wq7Ho_cJ4KoQpa1hotCbsjwYCwMylAGovy-Bs/1/public/values?alt=json-in-script&callback=doData';
 var http = require('http');
@@ -25,7 +25,11 @@ var affixes_list = ["Raging, Volcanic, Tyrannical",
     "Bolstering, Explosive, Tyrannical",
     "Bursting, Quaking, Fortified"
 ];
-
+var client_status = ["READY","CONNECTING",
+"RECONNECTING",
+"IDLE",
+"NEARLY",
+"DISCONNECTED"];
 var options = {
     host: 'spreadsheets.google.com',
     path: raidzbub_url
@@ -56,14 +60,14 @@ var question = "";
 var answer = [];
 
 setInterval(function () {
-    if (clientState != client.state) {
-        console.log(client.state + " at " + new Date().toString());
+    if (clientState != client.status) {
+        console.log(client_status[client.status] + " at " + new Date().toString());
     }
-    clientState = client.state;
+    clientState = client.status;
     var game = {
 	name: "with !help"
     };
-    client.User.setStatus("online", game);
+    client.user.setStatus("online", game);
 }, 30000, function (error) { /* handle error */ });
 
 var option = { // NOT USED ?
@@ -75,57 +79,52 @@ var index = 0;
 // ----------------------------------INTERVAL FUNCTION UPDATE
 // STREAMER-----------------------------------------
 setInterval(function () {
-    if (!client.connected) {
-         return console.log("|Discordie| not connected : " + client.state + "at " + new Date().toString());
+    if (client_status[client.status] != "READY") {
+         return 0;
     }
     twitch.refresh(client);
 }, twitch_interval);
 
-client.connect({
-    // replace this sample token
-    token: process.env.BOT_TOKEN
-});
+client.login(
+    // process.env.BOT_TOKEN
+    'NTM2OTU1NDQ4NjI1MDcwMDgx.DyeO4g.yurLcNvJLjJBSjsAQCUQ3FAI5Iw');
 /*
  * var twitch = new TwitchApi({ clientId: 'qxihlu11ef6gpohfhqb9b27d40u6lj',
  * clientSecret: 'xcu8yvdlz9j8r2nu5thoqzcadbnb7g', redirectUrl:
  * "application/vnd.twitchtv.v5+json", scopes: scope });
  */
 
-client.Dispatcher.on("GATEWAY_READY", function (e) {
-    console.log("Connected as: " + client.User.username + " at " + new Date().toString());
-    if (client.autoReconnect.enabled) {
-        console.log("autoreconnect already enabled");
-    } else {
-        client.autoReconnect.enable();
-        console.log("autoreconnect enable");
-    }
+client.on("ready", function (e) {
+    console.log("Connected as: " + client.user.tag + " at " + new Date().toString());
+//    if (client.autoReconnect.enabled) {
+//        console.log("autoreconnect already enabled");
+//    } else {
+//        client.autoReconnect.enable();
+//        console.log("autoreconnect enable");
+//    }
 });
 
-client.Dispatcher.on("DISCONNECTED", function (e) {
-    console.log("DISCONNECTED at " + new Date().toString());
+client.on("disconnect", function (e) {
+    console.log("disconnected at " + new Date().toString());
     console.log("error : " + e.error);
     console.log("autoReconnect : " + e.autoReconnect);
     console.log("auto reconnect delay : " + e.delay);
 });
 
-client.Dispatcher.on("MESSAGE_CREATE", function (e) {
-    if (e.message.author.id == client.User.id) {
+client.on("message", function (msg) {
+    if (msg.author.id == client.user.id) {
         return;
     }
-    if (!e.message.content.startsWith('!')) {
+    if (!msg.content.startsWith('!')) {
         return;
     }
     
-    var message_channel_obj = client.Channels.filter(obj => {
-        return obj.id === e.message.channel_id;
-    })[0];
-    var message_guild = message_channel_obj.guild_id;
+    var message_guild = msg.channel.guild.id;
     guild_db = db.collection('server').doc(message_guild);
 
-    var args = e.message.content.split(' ');
+    var args = msg.content.split(' ');
     var input_command = args[0];
     args.shift();
-    var msg = e.message;
     
     switch (input_command) {
         case "!debug":
@@ -133,10 +132,10 @@ client.Dispatcher.on("MESSAGE_CREATE", function (e) {
             final_string += client.state + " at " + new Date().toLocaleTimeString() + "\n";
             final_string += "autoreconnect : " + client.autoReconnect.enabled + "\n";
             final_string += "client is connected : " + client.connected + "\n";
-            e.message.channel.sendMessage(final_string);
+            msg.channel.send(final_string);
             break;
         case "!help":
-            e.message.channel.sendMessage("**!calendar** : retourne l'utilisation du calendrier\n" +
+            msg.channel.send("**!calendar** : retourne l'utilisation du calendrier\n" +
                 "**!resto?** : retourne les disponibilitées du resto\n" +
                 "**!resetresto** : reset le planing du resto\n" +
                 "**!disporesto** j (commentaire): defini mes dispo du resto ex : \"!disporesto 124 osef\" pour lundi,mardi,jeudi\n" +
@@ -157,39 +156,39 @@ client.Dispatcher.on("MESSAGE_CREATE", function (e) {
                 })
             }).then(() => {
                 if(str) {
-                    e.message.channel.sendMessage(str);
+                    msg.channel.send(str);
                 } else {
-                    e.message.channel.sendMessage("Aucune commande disponible.");
+                    msg.channel.send("Aucune commande disponible.");
                 }
             })
             break;
         case "!dev":
-            e.message.channel.sendMessage("http://qeled.github.io/discordie/#/docs/Discordie?_k=9oyisd");
+            msg.channel.send("http://qeled.github.io/discordie/#/docs/Discordie?_k=9oyisd");
             break;
         case "!invlink":
-            e.message.channel.sendMessage("https://discordapp.com/oauth2/authorize?scope=bot&client_id=283279977464725504");
+            msg.channel.send("https://discordapp.com/oauth2/authorize?scope=bot&client_id=283279977464725504");
             break;
         case "!ping":
-            e.message.channel.sendMessage(e.message.author.mention + " pong !?");
+            msg.channel.send(msg.author.toString() + " pong !?");
             break;
         case "!dbgListUser":
             var final_str = "";
-            client.Users.forEach(function (elem) {
+            client.users.forEach(function (elem) {
                 final_str += ("User.id : " + elem.id + " / User.username  : " + elem.username + "\n");
             });
-            final_str += ("Channel : " + e.message.channel.id + " / Guilde  : " + e.message.guild.id + "\n");
-            e.message.channel.sendMessage(final_str);
+            final_str += ("Channel : " + msg.channel.id + " / Guilde  : " + msg.guild.id + "\n");
+            msg.channel.send(final_str);
             break;
         case "!resto?":
-            displayrestodispo_command(e);
+            displayrestodispo_command(msg);
             break;
         case "!testresto":
-            e.message.channel.sendMessage("!disporesto 1,2,3,4 all");
+            msg.channel.send("!disporesto 1,2,3,4 all");
             break;
         case "!resetresto":
             resto_dispo = {};
             deleteCollection(db, 'server/'+ message_guild +'/resto', 500); 
-            e.message.addReaction("\ud83d\udc4c");
+            msg.addReaction("\ud83d\udc4c");
             break;
         case "!cho2plé":
         case "!Goplay":
@@ -204,12 +203,12 @@ client.Dispatcher.on("MESSAGE_CREATE", function (e) {
             break;
         case "!affixe":
         case "!affixes":
-            affixes_command(e);
+            affixes_command(msg);
             break;
         case "!assaut":
         case "!assault":
         case "!assaults":
-            assaults_command(e);
+            assaults_command(msg);
             break;
         case "!inva":
         case "!invasions":
@@ -225,19 +224,19 @@ client.Dispatcher.on("MESSAGE_CREATE", function (e) {
                         finale_str += answer.elem.votant + "\n";
                     }
                 }
-                e.message.channel.sendMessage(finale_str);
+                msg.channel.send(finale_str);
             } else {
-                e.message.channel.sendMessage("Pas de vote en cours, \"!votecreate\" pour créer un nouveau vote");
+                msg.channel.send("Pas de vote en cours, \"!votecreate\" pour créer un nouveau vote");
             }
             break;
         case "!votereset":
             question = "";
             answer = [];
-            e.message.addReaction("\ud83d\udc4c");
+            msg.addReaction("\ud83d\udc4c");
             break;
         case "!vote":
             if (question === "") {
-                msg.channel.sendMessage("Pas de vote en cours, \"!votecreate\" pour créer un nouveau vote");
+                msg.channel.send("Pas de vote en cours, \"!votecreate\" pour créer un nouveau vote");
                 return false;
             }
             msg.addReaction("\ud83d\udc4c");
@@ -264,7 +263,7 @@ client.Dispatcher.on("MESSAGE_CREATE", function (e) {
                 });
                 msg.addReaction("\ud83d\udc4c");
             } catch (erno) {
-                e.message.channel.sendMessage("Erreur sur la commande **\"!votecreate\"**");
+                msg.channel.send("Erreur sur la commande **\"!votecreate\"**");
             }
             break;
         case "!stream":
@@ -275,12 +274,12 @@ client.Dispatcher.on("MESSAGE_CREATE", function (e) {
                 debug_guild = 0;
                 return;
             }
-            debug_guild = e.message.guild.id;
-            debug_channel = e.message.channel.id;
-            e.message.channel.sendMessage("saved on " + debug_guild + " " + debug_channel);
+            debug_guild = msg.guild.id;
+            debug_channel = msg.channel.id;
+            msg.channel.send("saved on " + debug_guild + " " + debug_channel);
             break;
         case "!calendar":
-            calendar_command(e, args);
+            calendar_command(msg, args);
             break;
         case "!createcommand":
             var command = {
@@ -291,20 +290,20 @@ client.Dispatcher.on("MESSAGE_CREATE", function (e) {
             
             command.cmd = args[0];
             if (command.cmd.startsWith('!')) {
-                msg.channel.sendMessage("Je m'occupe de rajouter le ! tkt. (Commande non créée)");
+                msg.channel.send("Je m'occupe de rajouter le ! tkt. (Commande non créée)");
                 return;
             }
             command.cmd = '!' + command.cmd;
             command.msg = msg.content.replace(/^([^ ]+ ){2}/, '');
-            command.author = JSON.parse(JSON.stringify(e.message.author));
+            command.author = JSON.parse(JSON.stringify(msg.author));
             var commandRef = guild_db.collection('commands').doc(command.cmd)
 
             commandRef.get().then((snapshot) => {
                 if (snapshot.exists) {
-                    msg.channel.sendMessage("La commande " + command.cmd + " existe déjà.");
+                    msg.channel.send("La commande " + command.cmd + " existe déjà.");
                 } else {
                     commandRef.set(command);
-                    msg.channel.sendMessage("La commande " + command.cmd + " a été créée.");
+                    msg.channel.send("La commande " + command.cmd + " a été créée.");
                 }
             });
             break;
@@ -312,7 +311,7 @@ client.Dispatcher.on("MESSAGE_CREATE", function (e) {
             var command_to_remove = args[0];
 
             if (command_to_remove.startsWith('!')) {
-                msg.channel.sendMessage("Je m'occupe de rajouter le ! tkt. (Commande non suppr.)");
+                msg.channel.send("Je m'occupe de rajouter le ! tkt. (Commande non suppr.)");
                 return;
             }
             command_to_remove = '!' + command_to_remove;
@@ -321,16 +320,16 @@ client.Dispatcher.on("MESSAGE_CREATE", function (e) {
             commandRef.get().then((snapshot) => {
                 if (snapshot.exists) {
                     commandRef.delete();
-                    msg.channel.sendMessage("La commande " + command_to_remove + " a été supprimée");
+                    msg.channel.send("La commande " + command_to_remove + " a été supprimée");
                 } else {
-                    msg.channel.sendMessage("La commande " + command_to_remove + " n'existe pas.");
+                    msg.channel.send("La commande " + command_to_remove + " n'existe pas.");
                 }
             });
             break;
         case "!botname":
-            var name = e.message.content.substr(e.message.content.indexOf(" ") + 1);
-            client.User.setUsername(name);
-            e.message.channel.sendMessage("hoooo yeeaaaa " + name + " débarque !!");
+            var name = msg.content.substr(msg.content.indexOf(" ") + 1);
+            client.user.setUsername(name);
+            msg.channel.send("hoooo yeeaaaa " + name + " débarque !!");
             break;
         case "!disporesto":
             var date = args[0];
@@ -340,27 +339,27 @@ client.Dispatcher.on("MESSAGE_CREATE", function (e) {
             }
             // st words
             if ((date === undefined) /* ||( resto == undefined) */ ) {
-                msg.channel.sendMessage("erreur sur la commande");
+                msg.channel.send("erreur sur la commande");
             } else {
                 resto_mangeur.date = date;
                 resto_mangeur.comment = comment;
                 resto_mangeur.name = msg.displayUsername;
-                guild_db.collection('resto').doc(msg.author.mention).set(resto_mangeur);
+                guild_db.collection('resto').doc(msg.author.toString()).set(resto_mangeur);
                 msg.addReaction("\ud83d\udc4c");
             }
             break;
         default:
-            var commandRef = guild_db.collection('commands').doc(e.message.content)
+            var commandRef = guild_db.collection('commands').doc(msg.content)
             commandRef.get().then((snapshot) => {
                 if (snapshot.exists) {
-                    e.message.channel.sendMessage(snapshot.data().msg);
+                    msg.channel.send(snapshot.data().msg);
                 } 
             });
             break;
     }
 });
 
-function displayrestodispo_command(e) {
+function displayrestodispo_command(msg) {
     var final_string = "";
     var comment_string = "";
     var mangeur_list = [];
@@ -389,13 +388,13 @@ function displayrestodispo_command(e) {
     }).then(() => {
         if (mangeur_list === undefined || mangeur_list.length === 0) { // return
 									// planning
-            e.message.channel.sendMessage("Personne encore inscrit.\n!disporesto \"jjj\" \"resto\" pour vous inscrire");
+            msg.channel.send("Personne encore inscrit.\n!disporesto \"jjj\" \"resto\" pour vous inscrire");
         } else {
             jour.forEach(function (elem, index) {
                 final_string += week_day[index] +
                     " (" + mangeur_counter[index] + ") : " + elem + "\n";
             });
-            e.message.channel.sendMessage(final_string + comment_string);
+            msg.channel.send(final_string + comment_string);
         }
     });
 }
@@ -412,7 +411,7 @@ function invasion_command(e) {
         });
         res.on('end', function () {
             data = data.split('id="message">')[1].split('</div>')[0];
-            e.message.channel.sendMessage(" ", false, {
+            msg.channel.send({embed: {
                 color: 0x009900,
                 thumbnail: {
                     url: "https://invasion.wisak.me/img/legion.png"
@@ -424,16 +423,16 @@ function invasion_command(e) {
                 title: "invasion.wisak.me",
                 url: "http://invasion.wisak.me",
                 timestamp: new Date()
-            });
+            }});
         });
         res.on('error', function (e) {
-            console.log('problem with request: ' + e.message + " at " + new Date().toString());
+            console.log('problem with request: ' + msg + " at " + new Date().toString());
         });
     });
     requests.end();
 }
 
-function affixes_command(e) {
+function affixes_command(msg) {
     var opts_eu = { // NOT USED ? // A UTILISER SI BUG/DIFFERENTE AFFIXES NA/EU
         host: 'raider.io',
         path: "/api/v1/mythic-plus/affixes?region=eu"
@@ -452,7 +451,7 @@ function affixes_command(e) {
         });
         res.on('end', function () {
             data = JSON.parse(data_raw);
-            e.message.channel.sendMessage(" ", false, {
+            msg.channel.send({embed: {
                 color: 0x009900,
                 author: {
                     name: data.title,
@@ -478,10 +477,10 @@ function affixes_command(e) {
                     value: "*" + affixes_list[(today.getWeek() + 4) % 12] + "*"
                 }]
 
-            });
+            }});
         });
         res.on('error', function (e) {
-            console.log('problem with request: ' + e.message + " at " + new Date().toString());
+            console.log('problem with request: ' + msg + " at " + new Date().toString());
         });
     });
     requests.end();    
@@ -489,8 +488,7 @@ function affixes_command(e) {
 
 
 
-function calendar_command(e, args) {
-    var msg = e.message;
+function calendar_command(msg, args) {
     var noPlayer = 1;
     var request = http.request(options, function (res) {
         var data = '';
@@ -507,21 +505,21 @@ function calendar_command(e, args) {
                 ret.tag.forEach(function (tag, index) {
                     if (ret.upd[index] === undefined) {
                         noPlayer = 0;
-                        var user = client.Users.find(u => u.id == tag);
+                        var user = client.users.find(u => u.id == tag);
                         if (!user) {
-                            user_upd.push(player);
+                            user_upd.push(ret.player[index]);
                         } else {
-                            user_upd.push(user.mention);
+                            user_upd.push(user.toString());
                         }
                     }
                 });
                 if (noPlayer) {
-                    e.message.channel.sendMessage("tout le monde a rempli");
+                    msg.channel.send("tout le monde a rempli");
                 } else {
-                    e.message.channel.sendMessage(user_upd + " merci de remplir le calendrier\n<https://docs.google.com/spreadsheets/d/1am4oo8wq7Ho_cJ4KoQpa1hotCbsjwYCwMylAGovy-Bs/edit#gid=0>");
+                    msg.channel.send(user_upd + " merci de remplir le calendrier\n<https://docs.google.com/spreadsheets/d/1am4oo8wq7Ho_cJ4KoQpa1hotCbsjwYCwMylAGovy-Bs/edit#gid=0>");
                 }
             } else {
-                var name = e.message.content.substr(e.message.content.indexOf(" ") + 1);
+                var name = msg.content.substr(msg.content.indexOf(" ") + 1);
                 var final_string = "";
                 name.split(" ").forEach(function (elem, index) {
                     var toto = week_day_calendar.indexOf(elem);
@@ -554,17 +552,17 @@ function calendar_command(e, args) {
                         final_string += '\"' + elem + '\" jour inconnu utilisé : lun,mar,mer,jeu,ven,sam,dim\n';
                     }
                 });
-                e.message.channel.sendMessage(final_string);
+                msg.channel.send(final_string);
             }
         });
         request.on('error', function (e) {
-            console.log(e.message);
+            console.log(msg);
         });
     });
     request.end();
 }
 
-function assaults_command(e) {
+function assaults_command(msg) {
     var alliance_logo = "https://d1u5p3l4wpay3k.cloudfront.net/wowpedia/thumb/6/60/AllianceLogo.png/358px-AllianceLogo.png";
     var horde_logo = "https://d1u5p3l4wpay3k.cloudfront.net/wowpedia/thumb/e/e2/HordeLogo.png/473px-HordeLogo.png";
     var opts = {
@@ -587,7 +585,7 @@ function assaults_command(e) {
             } else {
                 faction_logo = horde_logo;
             }
-            e.message.channel.sendMessage(" ", false, {
+            msg.channel.send({embed: {
                 color: 0x009900,
                 thumbnail: {
                     url: faction_logo
@@ -598,10 +596,10 @@ function assaults_command(e) {
                 },
                 description: data.split('\n')[3],
                 timestamp: new Date()
-            });
+            }});
         });
         res.on('error', function (e) {
-            console.log('Problem with request: ' + e.message + " at " + new Date().toString());
+            console.log('Problem with request: ' + msg + " at " + new Date().toString());
         });
     });
     requests.end();
@@ -629,7 +627,7 @@ function Send_debug_msg(message) {
 
     if (debug_guild === 0) return;
 
-    var guild = client.Guilds.find(g => g.id == debug_guild);
+    var guild = client.guilds.find(g => g.id == debug_guild);
     if (!guild) return console.log("invalid guild");
     var channels = guild.textChannels.find(C => C.id == debug_channel);
     if (!channels) return console.log("invalid channel");

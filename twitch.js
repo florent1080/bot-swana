@@ -87,7 +87,7 @@ module.exports = {
                       if (data.stream.channel.status === "") {
                           data.stream.channel.status = "...";
                       }
-                      channels.sendMessage(" ", false, {
+                      channels.sendMessage({embed: {
                           color: 0x009900,
                           author: {
                               name: name + " is now streaming !",
@@ -111,7 +111,7 @@ module.exports = {
                           footer: {
                               text: "stream online"
                           }
-                      });
+                      }});
                   }
               } else {
                   stream[name].refreshed = false;
