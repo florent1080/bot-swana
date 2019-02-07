@@ -128,14 +128,14 @@ client.on("message", function (msg) {
             msg.channel.send("**!calendar** : retourne l'utilisation du calendrier\n" +
                 "**!resto?** : retourne les disponibilitées du resto\n" +
                 "**!resetresto** : reset le planing du resto\n" +
-                "**!disporesto** j (commentaire): defini mes dispo du resto ex : \"!disporesto 124 osef\" pour lundi,mardi,jeudi\n" +
+                "**!disporesto** j (commentaire): défini mes dispo du resto ex : \"!disporesto 124 osef\" pour lundi,mardi,jeudi\n" +
                 "**!assault** : affiche le prochain assaut\n" +
                 "**!invasion** : affiche la prochaine invasion de la Légion\n" +
                 "**!affixes** : affiche les affixes de donjon de clé mythique de la semaine\n" +
                 "**!goplay** : Uniquement pour les mecs MEGA cho2plé ! \n" +
                 "**!createcommand cmd display** : crée une commande personnalisée (pour afficher les commandes personnalisées utilisez \"!helpcommand\")\n" +
                 "**!removecommand cmd** : supprime une commande personnalisée\n" +
-                "**!stream cmd** : gere les notifications de stream (!stream help pour plus d'info)");
+                "**!stream cmd** : gère les notifications de stream (!stream help pour plus d'info)");
             break;
         case "!helpcommand":
             var str = "";
