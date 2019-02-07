@@ -64,10 +64,7 @@ setInterval(function () {
         console.log(client_status[client.status] + " at " + new Date().toString());
     }
     clientState = client.status;
-    var game = {
-	name: "with !help"
-    };
-    client.user.setStatus("online", game);
+
 }, 30000, function (error) { /* handle error */ });
 
 var option = { // NOT USED ?
@@ -85,9 +82,7 @@ setInterval(function () {
     twitch.refresh(client);
 }, twitch_interval);
 
-client.login(
-    // process.env.BOT_TOKEN
-    'NTM2OTU1NDQ4NjI1MDcwMDgx.DyeO4g.yurLcNvJLjJBSjsAQCUQ3FAI5Iw');
+client.login(process.env.BOT_TOKEN);
 /*
  * var twitch = new TwitchApi({ clientId: 'qxihlu11ef6gpohfhqb9b27d40u6lj',
  * clientSecret: 'xcu8yvdlz9j8r2nu5thoqzcadbnb7g', redirectUrl:
@@ -96,12 +91,7 @@ client.login(
 
 client.on("ready", function (e) {
     console.log("Connected as: " + client.user.tag + " at " + new Date().toString());
-//    if (client.autoReconnect.enabled) {
-//        console.log("autoreconnect already enabled");
-//    } else {
-//        client.autoReconnect.enable();
-//        console.log("autoreconnect enable");
-//    }
+    client.user.setActivity('!help');
 });
 
 client.on("disconnect", function (e) {
@@ -145,7 +135,7 @@ client.on("message", function (msg) {
                 "**!goplay** : Uniquement pour les mecs MEGA cho2plé ! \n" +
                 "**!createcommand cmd display** : crée une commande personnalisée (pour afficher les commandes personnalisées utilisez \"!helpcommand\")\n" +
                 "**!removecommand cmd** : supprime une commande personnalisée\n" +
-                "**!stream cmd** : gere les notifications de stream (!stream help pour plus d'info");
+                "**!stream cmd** : gere les notifications de stream (!stream help pour plus d'info)");
             break;
         case "!helpcommand":
             var str = "";
@@ -171,7 +161,7 @@ client.on("message", function (msg) {
         case "!ping":
             msg.channel.send(msg.author.toString() + " pong !?");
             break;
-        case "!dbgListUser":
+        case "!dbglistuser":
             var final_str = "";
             client.users.forEach(function (elem) {
                 final_str += ("User.id : " + elem.id + " / User.username  : " + elem.username + "\n");
@@ -188,7 +178,7 @@ client.on("message", function (msg) {
         case "!resetresto":
             resto_dispo = {};
             deleteCollection(db, 'server/'+ message_guild +'/resto', 500); 
-            msg.addReaction("\ud83d\udc4c");
+            msg.react("\ud83d\udc4c");
             break;
         case "!cho2plé":
         case "!Goplay":
@@ -196,9 +186,9 @@ client.on("message", function (msg) {
             var role = msg.guild.roles.find(fn => fn.name == "Cho2Plé !");
             var trigger = msg.member.roles.find(fn => fn.name == "Cho2Plé !");
             if (trigger) {
-                msg.member.unassignRole(role);
+                msg.member.removeRole(role).catch(console.error);
             } else {
-                msg.member.assignRole(role);
+                msg.member.addRole(role).catch(console.error);
             }
             break;
         case "!affixe":
@@ -213,7 +203,7 @@ client.on("message", function (msg) {
         case "!inva":
         case "!invasions":
         case "!invasion":
-            invasion_command(e);
+            invasion_command(msg);
             break;
         case "!vote?":
             if (question !== "") {
@@ -232,14 +222,14 @@ client.on("message", function (msg) {
         case "!votereset":
             question = "";
             answer = [];
-            msg.addReaction("\ud83d\udc4c");
+            msg.react("\ud83d\udc4c");
             break;
         case "!vote":
             if (question === "") {
                 msg.channel.send("Pas de vote en cours, \"!votecreate\" pour créer un nouveau vote");
                 return false;
             }
-            msg.addReaction("\ud83d\udc4c");
+            msg.react("\ud83d\udc4c");
             args.forEach(function (panswer) {
                 for (var elem in answer) {
                     if (answer.elem.reponse == panswer) {
@@ -261,13 +251,13 @@ client.on("message", function (msg) {
                     answer[elem].votant = "";
                     answer[elem].count = 0;
                 });
-                msg.addReaction("\ud83d\udc4c");
+                msg.react("\ud83d\udc4c");
             } catch (erno) {
                 msg.channel.send("Erreur sur la commande **\"!votecreate\"**");
             }
             break;
         case "!stream":
-            twitch.stream_command(e, args);
+            twitch.stream_command(msg, args);
             break;
         case "!dbgMsg":
             if (args[0] == "0") {
@@ -295,7 +285,10 @@ client.on("message", function (msg) {
             }
             command.cmd = '!' + command.cmd;
             command.msg = msg.content.replace(/^([^ ]+ ){2}/, '');
-            command.author = JSON.parse(JSON.stringify(msg.author));
+            command.author = msg.author;// JSON.parse(JSON.stringify(msg.author));
+            delete command.author.lastMessage;
+            delete command.author.client;
+            command.author =  JSON.parse(JSON.stringify(command.author));
             var commandRef = guild_db.collection('commands').doc(command.cmd)
 
             commandRef.get().then((snapshot) => {
@@ -343,9 +336,11 @@ client.on("message", function (msg) {
             } else {
                 resto_mangeur.date = date;
                 resto_mangeur.comment = comment;
-                resto_mangeur.name = msg.displayUsername;
-                guild_db.collection('resto').doc(msg.author.toString()).set(resto_mangeur);
-                msg.addReaction("\ud83d\udc4c");
+                resto_mangeur.name = msg.author.username;
+                var coll = guild_db.collection('resto');
+                var docu = coll.doc(msg.author.id);
+                docu.set(resto_mangeur);
+                msg.react("\ud83d\udc4c");
             }
             break;
         default:
@@ -399,7 +394,7 @@ function displayrestodispo_command(msg) {
     });
 }
 
-function invasion_command(e) {
+function invasion_command(msg) {
     var opts = {
         host: 'invasion.wisak.me',
         path: ""
@@ -632,8 +627,8 @@ function Send_debug_msg(message) {
     var channels = guild.textChannels.find(C => C.id == debug_channel);
     if (!channels) return console.log("invalid channel");
 
-    channels.sendMessage(message);
-    channels.sendMessage("!dbgMsg 0 pour enlever le mode débug");
+    channels.send(message);
+    channels.send("!dbgMsg 0 pour enlever le mode débug");
 }
 
 Date.prototype.getWeek = function () {
