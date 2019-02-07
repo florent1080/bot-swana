@@ -71,11 +71,11 @@ module.exports = {
                   if (stream[name].refreshed === false) {
                       stream[name].refreshed = true;
                     channel = twitch.option.channel;
-                      var guild = client.Guilds.find(g => g.id == twitch.option.guild);
+                      var guild = client.guilds.find(g => g.id == twitch.option.guild);
                       if (!guild) {
                           return console.log("invalid guild");
                       }
-                      var channels = guild.textChannels.find(C => C.id == channel);
+                      var channels = guild.channels.find(C => C.id == channel);
                       if (!channels) {
                           return console.log("invalid channel");
                       }
@@ -87,7 +87,7 @@ module.exports = {
                       if (data.stream.channel.status === "") {
                           data.stream.channel.status = "...";
                       }
-                      channels.sendMessage(" ", false, {
+                      channels.send({embed: {
                           color: 0x009900,
                           author: {
                               name: name + " is now streaming !",
@@ -111,7 +111,7 @@ module.exports = {
                           footer: {
                               text: "stream online"
                           }
-                      });
+                      }});
                   }
               } else {
                   stream[name].refreshed = false;
@@ -127,8 +127,7 @@ module.exports = {
 	  return stream[name].refreshed;
   },
   
- stream_command:  function(e, args) {
-      var msg = e.message;
+ stream_command:  function(msg, args) {
       var cmd = args[0];
       var twitch = util.read_file("./twitch.json");
       if (twitch.list === undefined) {
@@ -136,7 +135,7 @@ module.exports = {
       }
       switch (cmd) {
           case "help":
-              msg.channel.sendMessage("**!stream add channel** : ajoute le channel twitch à la liste de notification\n" +
+              msg.channel.send("**!stream add channel** : ajoute le channel twitch à la liste de notification\n" +
                   "**!stream channel #channel** : change le channel discord de notification\n" +
                   "**!stream remove channel** : supprime un channel twitch de la liste de notification\n" +
                   "**!stream list** : liste les channel enregistré");
@@ -153,13 +152,13 @@ module.exports = {
                   res.on('data', function (raw) {
                       raw = JSON.parse(raw);
                       if (raw.error == "Not Found") {
-                          e.message.channel.sendMessage(raw.message);
+                	  msg.channel.send(raw.message);
                       } else {
                           if (twitch.list.pushIfNotExist(streamer)) {
                               util.write_file("./twitch.json", twitch);
-                              msg.channel.sendMessage(raw.display_name + ' add to your list');
+                              msg.channel.send(raw.display_name + ' add to your list');
                           } else {
-                              msg.channel.sendMessage(streamer + " is already in your list");
+                              msg.channel.send(streamer + " is already in your list");
                           }
                       }
                   });
@@ -176,10 +175,10 @@ module.exports = {
                   var index = twitch.list.indexOf(name);
                   if (index > -1) {
                       twitch.list.splice(index, 1);
-                      msg.channel.sendMessage(name + " a été supprimé de la liste");
+                      msg.channel.send(name + " a été supprimé de la liste");
                       stream[name] = "";
                   } else {
-                      msg.channel.sendMessage("le channel n'est pas dans la liste");
+                      msg.channel.send("le channel n'est pas dans la liste");
                   }
                   util.write_file("./twitch.json", twitch);
               }
@@ -191,20 +190,20 @@ module.exports = {
                       final_string += "> " + elem + "\n";
                   });
               }
-              msg.channel.sendMessage(final_string);
+              msg.channel.send(final_string);
               break;
           case "notify":
               break;
           case "channel":
               var channel = msg.content.replace(/^([^ ]+ ){2}/, '').split(" ")[0];
-              msg.channel.sendMessage(">les notifications sont activées sur les channels :\n" + channel);
+              msg.channel.send(">les notifications sont activées sur les channels :\n" + channel);
               channel = channel.replace(/[^\/\d]/g, '');
               twitch.option.guild = msg.guild.id;
               twitch.option.channel = channel;
               util.write_file("./twitch.json", twitch);
               break;
           default:
-              msg.channel.sendMessage("commande non comprise \n**!stream help** pour la liste des commandes de stream disponibles");
+              msg.channel.send("commande non comprise \n**!stream help** pour la liste des commandes de stream disponibles");
               break;
       }
   },
