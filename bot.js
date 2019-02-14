@@ -1,6 +1,6 @@
 /*jshint esversion: 6 */
-const Discord = require('discord.js');
-const client = new Discord.Client();
+const {Client, Attachment} = require('discord.js');
+const client = new Client();
 const fs = require('fs');
 const util = require('./file_utils.js');
 const twitch = require('./twitch.js');
@@ -46,7 +46,7 @@ var clientState;
 var debug_guild = 0;
 var debug_channel = 0;
 
-//Firebase
+// Firebase
 const admin = require('firebase-admin');
 var serviceAccount = require('./bot-swana-firebase-adminsdk-u8zhh-8fa53e0908.json');
 admin.initializeApp({
@@ -73,8 +73,8 @@ var option = { // NOT USED ?
 	"guild": ""
 };
 var index = 0;
-//----------------------------------INTERVAL FUNCTION UPDATE
-//STREAMER-----------------------------------------
+// ----------------------------------INTERVAL FUNCTION UPDATE
+// STREAMER-----------------------------------------
 setInterval(function () {
     if (client_status[client.status] != "READY") {
 	return 0;
@@ -153,7 +153,7 @@ client.on("message", function (msg) {
 	})
 	break;
     case "!dev":
-	msg.channel.send("http://qeled.github.io/discordie/#/docs/Discordie?_k=9oyisd");
+	msg.channel.send("https://discord.js.org/#/docs/main/stable/general/welcome");
 	break;
     case "!invlink":
 	msg.channel.send("https://discordapp.com/oauth2/authorize?scope=bot&client_id=283279977464725504");
@@ -347,7 +347,13 @@ client.on("message", function (msg) {
 	var commandRef = guild_db.collection('commands').doc(msg.content)
 	commandRef.get().then((snapshot) => {
 	    if (snapshot.exists) {
-		msg.channel.send(snapshot.data().msg);
+		var url = snapshot.data().msg;
+		if(url.match(/\.(jpeg|jpg|gif|png)$/) != null){
+		    const attachment = new Attachment(url);
+		    msg.channel.send(attachment);
+		}else{
+		    msg.channel.send(url);
+		}
 	    } 
 	});
     break;
@@ -608,8 +614,8 @@ Array.prototype.inArray = function (comparer) {
     return false;
 };
 
-//adds an element to the array if it does not already exist using a comparer
-//function
+// adds an element to the array if it does not already exist using a comparer
+// function
 Array.prototype.pushIfNotExist = function (element) {
     if (!this.inArray(element)) {
 	this.push(element);
