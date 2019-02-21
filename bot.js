@@ -3,6 +3,7 @@ const {Client, Attachment} = require('discord.js');
 const client = new Client();
 const fs = require('fs');
 const util = require('./file_utils.js');
+const persist = require('./persist.js');
 const twitch = require('./twitch.js');
 var url = '/feeds/cells/1qwoWEsV5VGpK9O8GFMMVEDSsCdw5zBedApCHD1igOUM/1/public/values?alt=json-in-script&callback=doData';
 var raidzbub_url = '/feeds/cells/1am4oo8wq7Ho_cJ4KoQpa1hotCbsjwYCwMylAGovy-Bs/1/public/values?alt=json-in-script&callback=doData';
@@ -46,16 +47,6 @@ var clientState;
 var debug_guild = 0;
 var debug_channel = 0;
 
-// Firebase
-const admin = require('firebase-admin');
-var serviceAccount = require('./bot-swana-firebase-adminsdk-u8zhh-8fa53e0908.json');
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-});
-admin.firestore().settings( { timestampsInSnapshots: true })
-var db = admin.firestore();
-var guild_db = null;
-
 var question = "";
 var answer = [];
 
@@ -78,7 +69,7 @@ var index = 0;
 setInterval(function () {
     if (client_status[client.status] != "READY") {
 	return 0;
-    }
+	}
     twitch.refresh(client);
 }, twitch_interval);
 
@@ -109,9 +100,6 @@ client.on("message", function (msg) {
 	return;
     }
 
-    var message_guild = msg.channel.guild.id;
-    guild_db = db.collection('server').doc(message_guild);
-
     var args = msg.content.split(' ');
     var input_command = args[0];
     args.shift();
@@ -139,7 +127,7 @@ client.on("message", function (msg) {
 	break;
     case "!helpcommand":
 	var str = "";
-	guild_db.collection('commands').get().then(snapshot => {
+	persist.get_guild_db(msg).collection('commands').get().then(snapshot => {
 	    snapshot.forEach((doc) => {
 		var prvt_cmd = doc.data();
 		str += prvt_cmd.cmd + " by " + prvt_cmd.author.username + "\n";
@@ -177,7 +165,7 @@ client.on("message", function (msg) {
 	break;
     case "!resetresto":
 	resto_dispo = {};
-	deleteCollection(db, 'server/'+ message_guild +'/resto', 500); 
+	persist.deleteCollection('server/'+ msg.guild.id +'/resto', 500); 
 	msg.react("\ud83d\udc4c");
 	break;
     case "!cho2plé":
@@ -289,7 +277,7 @@ client.on("message", function (msg) {
 	delete command.author.lastMessage;
 	delete command.author.client;
 	command.author =  JSON.parse(JSON.stringify(command.author));
-	var commandRef = guild_db.collection('commands').doc(command.cmd)
+	var commandRef = persist.get_guild_db(msg).collection('commands').doc(command.cmd)
 
 	commandRef.get().then((snapshot) => {
 	    if (snapshot.exists) {
@@ -308,7 +296,7 @@ client.on("message", function (msg) {
 	    return;
 	}
 	command_to_remove = '!' + command_to_remove;
-	var commandRef = guild_db.collection('commands').doc(command_to_remove)
+	var commandRef = persist.get_guild_db(msg).collection('commands').doc(command_to_remove)
 
 	commandRef.get().then((snapshot) => {
 	    if (snapshot.exists) {
@@ -324,6 +312,18 @@ client.on("message", function (msg) {
 	client.user.setUsername(name);
 	msg.channel.send("hoooo yeeaaaa " + name + " débarque !!");
 	break;
+	case "!initserver":
+	var guild_id = msg.guild.id;
+	var serverRef = persist.db.collection('server').doc(guild_id);
+	serverRef.get().then(snapshot => {
+		if (snapshot.exists) {
+			msg.channel.send("Votre serveur est déja initialisé.");	
+		} else {
+			serverRef.set({active : true});
+			msg.channel.send("Votre serveur est maintenant initialisé.");	
+		}
+	});
+	break;
     case "!disporesto":
 	var date = args[0];
 	var comment = "";
@@ -336,15 +336,15 @@ client.on("message", function (msg) {
 	} else {
 	    resto_mangeur.date = date;
 	    resto_mangeur.comment = comment;
-	    resto_mangeur.name = msg.member.nickname;
-	    var coll = guild_db.collection('resto');
+		resto_mangeur.name = msg.member.nickname;
+	    var coll = persist.get_guild_db(msg).collection('resto');
 	    var docu = coll.doc(msg.author.id);
 	    docu.set(resto_mangeur);
 	    msg.react("\ud83d\udc4c");
 	}
 	break;
-    default:
-	var commandRef = guild_db.collection('commands').doc(msg.content)
+	default:
+	var commandRef = persist.get_guild_db(msg).collection('commands').doc(msg.content)
 	commandRef.get().then((snapshot) => {
 	    if (snapshot.exists) {
 		var url = snapshot.data().msg;
@@ -367,7 +367,7 @@ function displayrestodispo_command(msg) {
     var jour = ['', '', '', '', ''];
     var mangeur_counter = [0, 0, 0, 0, 0];
 
-    guild_db.collection('resto').get().then(snapshot => {
+	persist.get_guild_db(msg).collection('resto').get().then(snapshot => {
 	snapshot.forEach((doc) => {
 	    var mangeur = doc.data();
 	    mangeur_list.push(mangeur);
@@ -643,47 +643,3 @@ Date.prototype.getWeek = function () {
     var dayOfYear = ((today - onejan + 1) / 86400000);
     return Math.ceil(dayOfYear / 7);
 };
-
-function deleteCollection(db, collectionPath, batchSize) {
-    var collectionRef = db.collection(collectionPath);
-    var query = collectionRef.orderBy('__name__').limit(batchSize);
-
-    return new Promise(function(resolve, reject) {
-	deleteQueryBatch(db, query, batchSize, resolve, reject);
-    });
-}
-
-// Firebase tools for deleting one collection
-function deleteQueryBatch(db, query, batchSize, resolve, reject) {
-    query
-    .get()
-    .then(snapshot => {
-	// When there are no documents left, we are done
-	if (snapshot.size === 0) {
-	    return 0;
-	}
-
-	// Delete documents in a batch
-	var batch = db.batch();
-	snapshot.docs.forEach(doc => {
-	    batch.delete(doc.ref);
-	});
-
-	return batch.commit().then(() => {
-	    return snapshot.size;
-	});
-    })
-    .then(numDeleted => {
-	if (numDeleted === 0) {
-	    resolve();
-	    return;
-	}
-
-	// Recurse on the next process tick, to avoid
-	// exploding the stack.
-	process.nextTick(() => {
-	    deleteQueryBatch(db, query, batchSize, resolve, reject);
-	});
-    })
-    .catch(reject);
-}
