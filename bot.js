@@ -132,6 +132,7 @@ client.on("message", function (msg) {
 		"**!disporesto** j (commentaire): défini mes dispo du resto ex : \"!disporesto 124 osef\" pour lundi,mardi,jeudi\n" +
 		"**!assault** : affiche le prochain assaut\n" +
 		"**!invasion** : affiche la prochaine invasion de la Légion\n" +
+		"**!warfront** : affiche le statut des fronts de guerre\n" +
 		"**!affixes** : affiche les affixes de donjon de clé mythique de la semaine\n" +
 		"**!goplay** : Uniquement pour les mecs MEGA cho2plé ! \n" +
 		"**!createcommand cmd display** : crée une commande personnalisée (pour afficher les commandes personnalisées utilisez \"!helpcommand\")\n" +
