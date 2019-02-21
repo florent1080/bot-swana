@@ -336,7 +336,10 @@ client.on("message", function (msg) {
 	} else {
 	    resto_mangeur.date = date;
 	    resto_mangeur.comment = comment;
-	    resto_mangeur.name = msg.member.nickname;
+	    if(msg.member.nickname == null)
+		resto_mangeur.name = msg.author.username;
+	    else
+		resto_mangeur.name = msg.member.nickname;
 	    var coll = guild_db.collection('resto');
 	    var docu = coll.doc(msg.author.id);
 	    docu.set(resto_mangeur);
