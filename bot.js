@@ -336,7 +336,7 @@ client.on("message", function (msg) {
 	} else {
 	    resto_mangeur.date = date;
 	    resto_mangeur.comment = comment;
-	    resto_mangeur.name = msg.author.username;
+	    resto_mangeur.name = msg.member.nickname;
 	    var coll = guild_db.collection('resto');
 	    var docu = coll.doc(msg.author.id);
 	    docu.set(resto_mangeur);
@@ -564,8 +564,8 @@ function calendar_command(msg, args) {
 }
 
 function assaults_command(msg) {
-    var alliance_logo = "https://d1u5p3l4wpay3k.cloudfront.net/wowpedia/thumb/6/60/AllianceLogo.png/358px-AllianceLogo.png";
-    var horde_logo = "https://d1u5p3l4wpay3k.cloudfront.net/wowpedia/thumb/e/e2/HordeLogo.png/473px-HordeLogo.png";
+    var alliance_logo = "https://c-8oqtgrjgwu0x24icogrgfkcx2eewtugefpx2eeqo.g00.gamepedia.com/g00/3_c-8yqy.icogrgfkc.eqo_/c-8OQTGRJGWU0x24jvvrux3ax2fx2ficogrgfkc.ewtugefp.eqox2fyqyrgfkcx2fvjwodx2f8x2f82x2fCnnkcpegNqiq.rpix2f022rz-CnnkcpegNqiq.rpix3fk32e.octmx3dkocig_$/$/$/$/$/$/$";
+    var horde_logo = "https://c-8oqtgrjgwu0x24icogrgfkcx2eewtugefpx2eeqo.g00.gamepedia.com/g00/3_c-8yqy.icogrgfkc.eqo_/c-8OQTGRJGWU0x24jvvrux3ax2fx2ficogrgfkc.ewtugefp.eqox2fyqyrgfkcx2fgx2fg4x2fJqtfgNqiq.rpix3fx78gtukqpx3d7eh29f66e163g36g57g7g2fhf7f871c2_$/$/$/$/$?i10c.ua=1&i10c.dv=21";
     var opts = {
 	    host: 'www.mamytwink.com',
 	    path: "/assauts-bfa",
