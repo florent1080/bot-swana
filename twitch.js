@@ -12,7 +12,9 @@ module.exports = {
         var servers = [];
         persist.db.collection('server').get().then(snapshot => {
             snapshot.forEach((doc) => {
-                servers.push(doc.id);
+                if (doc.data().active) {
+                    servers.push(doc.id);
+                }
             });
         }).then(() => {
             servers.forEach(serv => {
@@ -27,7 +29,6 @@ module.exports = {
         });
     },
     refresh_server: function (client, twitch_info) {
-        console.log('Refreshing Twitch for ' + twitch_info.option.guild);
         twitch = {
             "stream": {},
             "option": twitch_info.option,
@@ -207,7 +208,7 @@ module.exports = {
 
                 listRef.get().then((snapshot) => {
                     if (snapshot.exists) {
-                
+
                         var name = msg.content.replace(/^([^ ]+ ){2}/, '').split(" ")[0];
                         listRef.update({
                             "streamers": FieldValue.arrayRemove(name)
