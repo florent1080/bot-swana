@@ -4,6 +4,7 @@ const client = new Client();
 const fs = require('fs');
 const util = require('./file_utils.js');
 const twitch = require('./twitch.js');
+const warfront = require('./warfront.js');
 var url = '/feeds/cells/1qwoWEsV5VGpK9O8GFMMVEDSsCdw5zBedApCHD1igOUM/1/public/values?alt=json-in-script&callback=doData';
 var raidzbub_url = '/feeds/cells/1am4oo8wq7Ho_cJ4KoQpa1hotCbsjwYCwMylAGovy-Bs/1/public/values?alt=json-in-script&callback=doData';
 var http = require('http');
@@ -131,6 +132,7 @@ client.on("message", function (msg) {
 		"**!disporesto** j (commentaire): défini mes dispo du resto ex : \"!disporesto 124 osef\" pour lundi,mardi,jeudi\n" +
 		"**!assault** : affiche le prochain assaut\n" +
 		"**!invasion** : affiche la prochaine invasion de la Légion\n" +
+		"**!warfront** : affiche le statut des fronts de guerre\n" +
 		"**!affixes** : affiche les affixes de donjon de clé mythique de la semaine\n" +
 		"**!goplay** : Uniquement pour les mecs MEGA cho2plé ! \n" +
 		"**!createcommand cmd display** : crée une commande personnalisée (pour afficher les commandes personnalisées utilisez \"!helpcommand\")\n" +
@@ -204,6 +206,9 @@ client.on("message", function (msg) {
     case "!invasions":
     case "!invasion":
 	invasion_command(msg);
+	break;
+    case "!warfront":
+	warfront.update(msg);
 	break;
     case "!vote?":
 	if (question !== "") {
@@ -584,13 +589,16 @@ function assaults_command(msg) {
 	    var zone = data.substring(data.indexOf("<b>") + 3, data.indexOf("</b>"));
 	    data = data.replace('<br />', '\n').replace(/<[^>]+>/g, '').replace(/\t/g, '').replace('&#039;', "'");
 	    var faction_logo = "";
+	    var faction_color = "";
 	    if (allianceZones.includes(zone)) {
 		faction_logo = alliance_logo;
+		faction_color = 0x144587;
 	    } else {
 		faction_logo = horde_logo;
+		faction_color = 0x8C1616;
 	    }
 	    msg.channel.send({embed: {
-		color: 0x009900,
+		color: faction_color,
 		thumbnail: {
 		    url: faction_logo
 		},
