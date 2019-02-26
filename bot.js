@@ -484,7 +484,7 @@ function affixes_command(msg) {
 		    value: data.affix_details[3].description
 		}, {
 		    name: "Next Week",
-		    value: "*" + affixes_list[(today.getWeek() + 6) % 12] + "*"
+		    value: "*" + affixes_list[(today.getWeek() + 5) % 12] + "*"
 		}]
 
 	    }});
