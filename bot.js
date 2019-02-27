@@ -14,18 +14,19 @@ var week_day = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"];
 var week_day_calendar = ["mer", "jeu", "ven", "sam", "dim", "lun", "mar"];
 var allianceZones = ["Vallée Chantorage", "Rade de Tiragarde", "Drustvar"];
 var twitch_interval = 30000;
-var affixes_list = ["Fortified, Sanguine, Necrotic, Reaping",
-                    "Tyrannical, Bursting, Skittish, Reaping",
-                    "Fortified, Teeming, Quaking, Reaping",
-                    "Tyrannical, Raging, Necrotic, Reaping",
-                    "Fortified, Bolstering, Skittish, Reaping",
-                    "Tyrannical, Teeming, Volcanic, Reaping",
+var affixes_list = [
                     "Fortified, Sanguine, Grievous, Reaping",
                     "Tyrannical, Bolstering, Explosive, Infested",
                     "Fortified, Bursting, Quaking, Reaping",
                     "Tyrannical, Raging, Volcanic, Reaping",
                     "Fortified, Teeming, Explosive, Reaping",
-                    "Tyrannical, Bolstering, Grievous, Reaping"
+                    "Tyrannical, Bolstering, Grievous, Reaping",
+                    "Fortified, Sanguine, Necrotic, Reaping",
+                    "Tyrannical, Bursting, Skittish, Reaping",
+                    "Fortified, Teeming, Quaking, Reaping",
+                    "Tyrannical, Raging, Necrotic, Reaping",
+                    "Fortified, Bolstering, Skittish, Reaping",
+                    "Tyrannical, Teeming, Volcanic, Reaping"
                     ];
 var client_status = ["READY","CONNECTING",
                      "RECONNECTING",
@@ -484,7 +485,7 @@ function affixes_command(msg) {
 		    value: data.affix_details[3].description
 		}, {
 		    name: "Next Week",
-		    value: "*" + affixes_list[(today.getWeek() + 5) % 12] + "*"
+		    value: "*" + affixes_list[today.getWeek() % 12] + "*"
 		}]
 
 	    }});
