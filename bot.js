@@ -94,6 +94,11 @@ client.on("disconnect", function (e) {
     console.log("auto reconnect delay : " + e.delay);
 });
 
+client.on("error", info => {
+    console.log('Error event:\n' + JSON.stringify(info));
+    // handle the error here
+  });
+
 client.on("message", function (msg) {
     if (msg.author.id == client.user.id) {
 	return;
