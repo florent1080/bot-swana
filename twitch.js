@@ -48,8 +48,11 @@ module.exports = {
         var data_raw = "";
         var twitch_option = {
             host: "api.twitch.tv",
-            path: "/kraken/streams/" + name + "?client_id=qxihlu11ef6gpohfhqb9b27d40u6lj",
-            method: 'GET'
+            path: "/helix/streams?user_login=" + name,
+            method: 'GET',
+            headers: {
+                'Client-ID': 'qxihlu11ef6gpohfhqb9b27d40u6lj'
+            }
         };
         var req = https.request(twitch_option, function (res) {
             if (res.statusCode !== 200) {
@@ -69,12 +72,11 @@ module.exports = {
                 streamer.response = data_raw;
                 streamer.update_time = new Date().toString();
                 data = JSON.parse(data_raw);
-                if (data._links === undefined) {
+                if (data.data === undefined) {
                     console.log("invalid data");
                     return console.log(data);
                 }
-                name = data._links.self.split('/');
-                name = name[name.length - 1];
+                
                 if (stream[name] !== undefined) {
                     if (stream[name].refreshed === true) {
                         streamer.refreshed = true;
@@ -85,7 +87,10 @@ module.exports = {
                     streamer.refreshed = false;
                 }
                 stream[name] = streamer;
-                if (data.stream !== null) {
+
+                if (data.data.length !== 0) {
+                    const current_data = data.data[0];
+
                     if (stream[name].refreshed === false) {
                         stream[name].refreshed = true;
                         channel = twitch.option.channel;
@@ -99,11 +104,11 @@ module.exports = {
                         }
                         console.log(new Date().toString());
                         console.log(data);
-                        if (data.stream.channel.game === "") {
-                            data.stream.channel.game = "...";
+                        if (current_data.game_id === "") {
+                            current_data.game_id = "...";
                         }
-                        if (data.stream.channel.status === "") {
-                            data.stream.channel.status = "...";
+                        if (current_data.title === "") {
+                            current_data.title = "...";
                         }
                         channels.send({
                             embed: {
@@ -112,20 +117,18 @@ module.exports = {
                                     name: name + " is now streaming !",
                                     icon_url: "https://images-ext-1.discordapp.net/external/IZEY6CIxPwbBTk-S6KG6WSMxyY5bUEM-annntXfyqbw/https/cdn.discordapp.com/emojis/287637883022737418.png"
                                 },
-                                title: data.stream.channel.url,
-                                url: data.stream.channel.url,
-                                timestamp: data.stream.created_at,
+                                title: "https://twitch.tv/" + name,
+                                url: "https://twitch.tv/" + name,
+                                timestamp: current_data.started_at,
                                 thumbnail: {
-                                    url: data.stream.channel.logo,
-                                    height: 80,
-                                    width: 80
+                                    url: current_data.thumbnail_url.replace("{height}", "80").replace("{width}", "80"),
                                 },
                                 fields: [{
                                     name: "Playing",
-                                    value: data.stream.channel.game
+                                    value: current_data.game_id
                                 }, {
                                     name: "Title",
-                                    value: data.stream.channel.status
+                                    value: current_data.title
                                 }],
                                 footer: {
                                     text: "stream online"
