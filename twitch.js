@@ -63,7 +63,7 @@ module.exports = {
                 data_raw += raw;
             });
 
-            res.on('end', function () {
+            res.on('end', async function () {
                 var streamer = {
                     "response": "",
                     "update_time": "",
@@ -76,7 +76,7 @@ module.exports = {
                     console.log("invalid data");
                     return console.log(data);
                 }
-                
+
                 if (stream[name] !== undefined) {
                     if (stream[name].refreshed === true) {
                         streamer.refreshed = true;
@@ -103,9 +103,31 @@ module.exports = {
                             return console.log("invalid channel");
                         }
                         console.log(new Date().toString());
-                        console.log(data);
+
+                        const game_name;
                         if (current_data.game_id === "") {
                             current_data.game_id = "...";
+                        } else {
+                            const twitch_game_call_opt = {
+                                host: "api.twitch.tv",
+                                path: "/helix/games?id=" + current_data.game_id,
+                                method: 'GET',
+                                headers: {
+                                    'Client-ID': 'qxihlu11ef6gpohfhqb9b27d40u6lj'
+                                }
+                            }
+                            game_name = await https.request(twitch_game_call_opt, function (res) {
+                                if (res.statusCode !== 200) {
+                                    return console.log("invalide status " + res.statusCode + " at " + new Date().toString());
+                                }
+                                res.setEncoding('utf8');
+                                res.on('data', function (raw) {
+                                    const json = JSON.parse(raw);
+                                    const game_data = json.data[0];
+
+                                    return game_data.name || '...';
+                                });
+                            })
                         }
                         if (current_data.title === "") {
                             current_data.title = "...";
@@ -125,7 +147,7 @@ module.exports = {
                                 },
                                 fields: [{
                                     name: "Playing",
-                                    value: current_data.game_id
+                                    value: game_name
                                 }, {
                                     name: "Title",
                                     value: current_data.title
