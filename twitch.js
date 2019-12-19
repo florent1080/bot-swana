@@ -118,7 +118,7 @@ module.exports = {
                             }
                             game_name = await https.request(twitch_game_call_opt, function (res) {
                                 if (res.statusCode !== 200) {
-                                    return console.log("invalide status " + res.statusCode + " at " + new Date().toString());
+                                    return console.log("invalide status for /games?id call" + res.statusCode + " at " + new Date().toString());
                                 }
                                 res.setEncoding('utf8');
                                 res.on('data', function (raw) {
