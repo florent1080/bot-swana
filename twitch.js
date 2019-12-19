@@ -104,6 +104,7 @@ module.exports = {
                         }
                         console.log(new Date().toString());
 
+                        const game_name;
                         if (current_data.game_id === "") {
                             current_data.game_id = "...";
                         } else {
@@ -115,9 +116,9 @@ module.exports = {
                                     'Client-ID': 'qxihlu11ef6gpohfhqb9b27d40u6lj'
                                 }
                             }
-                            const game_name = await https.request(twitch_game_call_opt, function (res) {
+                            game_name = await https.request(twitch_game_call_opt, function (res) {
                                 if (res.statusCode !== 200) {
-                                    return console.log("invalide status " + res.statusCode + " at " + new Date().toString());
+                                    return console.log("invalide status for /games?id call" + res.statusCode + " at " + new Date().toString());
                                 }
                                 res.setEncoding('utf8');
                                 res.on('data', function (raw) {
