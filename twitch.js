@@ -3,9 +3,38 @@
  */
 const persist = require('./persist.js');
 const https = require('https');
+const request = require('request');
 var twitch;
 var stream = {};
 var index = 0;
+
+function sendChannels(channels, data) {
+    channels.send({
+        embed: {
+            color: 0x009900,
+            author: {
+                name: data.user_name + " is now streaming !",
+                icon_url: "https://images-ext-1.discordapp.net/external/IZEY6CIxPwbBTk-S6KG6WSMxyY5bUEM-annntXfyqbw/https/cdn.discordapp.com/emojis/287637883022737418.png"
+            },
+            title: "https://twitch.tv/" + data.channel_name,
+            url: "https://twitch.tv/" + data.channel_name,
+            timestamp: data.started_at,
+            thumbnail: {
+                url: data.thumbnail_url.replace("{height}", "80").replace("{width}", "80"),
+            },
+            fields: [{
+                name: "Playing",
+                value: data.game_id
+            }, {
+                name: "Title",
+                value: data.title
+            }],
+            footer: {
+                text: "stream online"
+            }
+        }
+    });
+}
 
 module.exports = {
     refresh: function (client) {
@@ -44,130 +73,85 @@ module.exports = {
         if (index >= twitch.list.length) {
             index = 0;
         }
-        var data;
-        var data_raw = "";
         var twitch_option = {
-            host: "api.twitch.tv",
-            path: "/helix/streams?user_login=" + name,
+            url: "https://api.twitch.tv/helix/streams?user_login=" + name,
             method: 'GET',
             headers: {
                 'Client-ID': 'qxihlu11ef6gpohfhqb9b27d40u6lj'
-            }
+            },
+            json: true,
         };
-        var req = https.request(twitch_option, function (res) {
-            if (res.statusCode !== 200) {
-                return console.log("invalide status " + res.statusCode + " at " + new Date().toString());
+        request(twitch_option, function (err, res, body) {
+            if (err) console.log(err)
+            var streamer = {
+                "response": "",
+                "update_time": "",
+                "refreshed": ""
+            };
+            streamer.response = body;
+            streamer.update_time = new Date().toString();
+            if (body.data === undefined) {
+                console.log("invalid data");
+                return console.log(body);
             }
-            res.setEncoding('utf8');
-            res.on('data', function (raw) {
-                data_raw += raw;
-            });
 
-            res.on('end', async function () {
-                var streamer = {
-                    "response": "",
-                    "update_time": "",
-                    "refreshed": ""
-                };
-                streamer.response = data_raw;
-                streamer.update_time = new Date().toString();
-                data = JSON.parse(data_raw);
-                if (data.data === undefined) {
-                    console.log("invalid data");
-                    return console.log(data);
-                }
-
-                if (stream[name] !== undefined) {
-                    if (stream[name].refreshed === true) {
-                        streamer.refreshed = true;
-                    } else {
-                        streamer.refreshed = false;
-                    }
+            if (stream[name] !== undefined) {
+                if (stream[name].refreshed === true) {
+                    streamer.refreshed = true;
                 } else {
                     streamer.refreshed = false;
                 }
-                stream[name] = streamer;
+            } else {
+                streamer.refreshed = false;
+            }
+            stream[name] = streamer;
 
-                if (data.data.length !== 0) {
-                    const current_data = data.data[0];
+            if (body.data.length !== 0) {
+                var stream_data = body.data[0];
+                stream_data.channel_name = name;
 
-                    if (stream[name].refreshed === false) {
-                        stream[name].refreshed = true;
-                        channel = twitch.option.channel;
-                        var guild = client.guilds.find(g => g.id == twitch.option.guild);
-                        if (!guild) {
-                            return console.log("invalid guild");
+                if (stream[name].refreshed === false) {
+                    stream[name].refreshed = true;
+                    channel = twitch.option.channel;
+                    var guild = client.guilds.find(g => g.id == twitch.option.guild);
+                    if (!guild) {
+                        return console.log("invalid guild");
+                    }
+                    var channels = guild.channels.find(C => C.id == channel);
+                    if (!channels) {
+                        return console.log("invalid channel");
+                    }
+                    console.log(new Date().toString());
+
+                    if (stream_data.title === "") {
+                        stream_data.title = "...";
+                    }
+                    if (stream_data.game_id === "") {
+                        stream_data.game_id = "...";
+                        sendChannels(channels, stream_data)
+                    } else {
+                        const twitch_game_call_opt = {
+                            url: "https://api.twitch.tv/helix/games?id=" + stream_data.game_id,
+                            method: 'GET',
+                            headers: {
+                                'Client-ID': 'qxihlu11ef6gpohfhqb9b27d40u6lj'
+                            },
+                            json: true
                         }
-                        var channels = guild.channels.find(C => C.id == channel);
-                        if (!channels) {
-                            return console.log("invalid channel");
-                        }
-                        console.log(new Date().toString());
-
-                        const game_name;
-                        if (current_data.game_id === "") {
-                            current_data.game_id = "...";
-                        } else {
-                            const twitch_game_call_opt = {
-                                host: "api.twitch.tv",
-                                path: "/helix/games?id=" + current_data.game_id,
-                                method: 'GET',
-                                headers: {
-                                    'Client-ID': 'qxihlu11ef6gpohfhqb9b27d40u6lj'
-                                }
+                        request(twitch_game_call_opt, function (err, res, body) {
+                            if (err) console.log(err);
+                            else {
+                                stream_data.game_id = body.data[0].name;
+                                sendChannels(channels, stream_data)
                             }
-                            game_name = await https.request(twitch_game_call_opt, function (res) {
-                                if (res.statusCode !== 200) {
-                                    return console.log("invalide status for /games?id call" + res.statusCode + " at " + new Date().toString());
-                                }
-                                res.setEncoding('utf8');
-                                res.on('data', function (raw) {
-                                    const json = JSON.parse(raw);
-                                    const game_data = json.data[0];
-
-                                    return game_data.name || '...';
-                                });
-                            })
-                        }
-                        if (current_data.title === "") {
-                            current_data.title = "...";
-                        }
-                        channels.send({
-                            embed: {
-                                color: 0x009900,
-                                author: {
-                                    name: name + " is now streaming !",
-                                    icon_url: "https://images-ext-1.discordapp.net/external/IZEY6CIxPwbBTk-S6KG6WSMxyY5bUEM-annntXfyqbw/https/cdn.discordapp.com/emojis/287637883022737418.png"
-                                },
-                                title: "https://twitch.tv/" + name,
-                                url: "https://twitch.tv/" + name,
-                                timestamp: current_data.started_at,
-                                thumbnail: {
-                                    url: current_data.thumbnail_url.replace("{height}", "80").replace("{width}", "80"),
-                                },
-                                fields: [{
-                                    name: "Playing",
-                                    value: game_name
-                                }, {
-                                    name: "Title",
-                                    value: current_data.title
-                                }],
-                                footer: {
-                                    text: "stream online"
-                                }
-                            }
-                        });
+                        })
                     }
                 } else {
                     stream[name].refreshed = false;
-                    ret_value = false;
+                    // ret_value = false;
                 }
-            });
+            }
         });
-        req.on('error', (e) => {
-            console.log('problem with request: ' + e.message + " at " + new Date().toString());
-        });
-        req.end();
         if (stream[name] !== undefined)
             return stream[name].refreshed;
     },
