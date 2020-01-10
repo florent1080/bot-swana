@@ -146,10 +146,10 @@ module.exports = {
                             }
                         })
                     }
-                } else {
-                    stream[name].refreshed = false;
-                    // ret_value = false;
                 }
+            } else {
+                stream[name].refreshed = false;
+                // ret_value = false; // ollrek: ça a l'air de servir à rien mais dans le doute je suppr pas vous le ferez si vous savez
             }
         });
         if (stream[name] !== undefined)
