@@ -76,6 +76,17 @@ setInterval(function () {
 }, twitch_interval);
 
 client.login(process.env.BOT_TOKEN);
+// ---------INTERVAL FUNCTION FETCH GUILD MEMBERS---------
+
+setInterval(function () {
+client.guilds.cache.forEach(function(guild){
+	if(guild.memberCount != guild.members.cache.size){
+		guild.members.fetch();
+	}
+});
+}, 10000);
+
+
 /*
  * var twitch = new TwitchApi({ clientId: 'qxihlu11ef6gpohfhqb9b27d40u6lj',
  * clientSecret: 'xcu8yvdlz9j8r2nu5thoqzcadbnb7g', redirectUrl:
@@ -158,9 +169,14 @@ client.on("message", function (msg) {
 	msg.channel.send(msg.author.toString() + " pong !?");
 	break;
     case "!dbglistuser":
-	var final_str = "";
-	client.users.forEach(function (elem) {
-	    final_str += ("User.id : " + elem.id + " / User.username  : " + elem.username + "\n");
+	var final_str = "------------------\n";
+	final_str += "Number of members : " + msg.channel.guild.memberCount + "\n";
+	msg.channel.guild.members.cache.forEach(function (mems) {
+	    final_str += ("User.id : " + mems.user.id + " / User.username  : " + mems.user.username + "\n");
+	    if(final_str.length > 1900){
+	        msg.channel.send(final_str);
+	        final_str = "";
+	    }
 	});
 	final_str += ("Channel : " + msg.channel.id + " / Guilde  : " + msg.guild.id + "\n");
 	msg.channel.send(final_str);
@@ -179,12 +195,12 @@ client.on("message", function (msg) {
     case "!cho2plé":
     case "!Goplay":
     case "!goplay":
-	var role = msg.guild.roles.find(fn => fn.name == "Cho2Plé !");
-	var trigger = msg.member.roles.find(fn => fn.name == "Cho2Plé !");
+	var role = msg.guild.roles.cache.find(fn => fn.name == "Cho2Plé !");
+	var trigger = msg.member.roles.cache.find(fn => fn.name == "Cho2Plé !");
 	if (trigger) {
-	    msg.member.removeRole(role).catch(console.error);
+	    msg.member.roles.remove(role).catch(console.error);
 	} else {
-	    msg.member.addRole(role).catch(console.error);
+	    msg.member.roles.add(role).catch(console.error);
 	}
 	break;
     case "!affixe":
@@ -521,7 +537,7 @@ function calendar_command(msg, args) {
 		ret.tag.forEach(function (tag, index) {
 		    if (ret.upd[index] === undefined) {
 			noPlayer = 0;
-			var user = client.users.find(u => u.id == tag);
+			var user = msg.channel.guild.members.cache.find(u => u.id == tag);
 			if (!user) {
 			    user_upd.push(ret.player[index]);
 			} else {

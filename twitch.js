@@ -127,7 +127,7 @@ module.exports = {
                         if (stream[name].refreshed === false) {
                             stream[name].refreshed = true;
                             channel = twitch.option.channel;
-                            var guild = client.guilds.find(g => g.id == twitch.option.guild);
+                            var guild = client.guilds.cache.find(g => g.id == twitch.option.guild);
                             if (!guild) {
                                 return console.log("invalid guild");
                             }
